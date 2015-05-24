@@ -23,8 +23,7 @@ public class Simbolo {
 	private boolean visible;						//Simbolo visible
 	private ArrayList<Simbolo> lista_parametros;	//Lista de simbolos representando parametros de una accion
 	private long dir;								//Direccion del simbolo
-	
-	
+	private String nombreAccion;					//Nombre de la accion a la que pertenece el simbolo
 	
 	/* Getters y Setters */
 	public String getNombre() {
@@ -75,6 +74,12 @@ public class Simbolo {
 	public void setDir(long dir) {
 		this.dir = dir;
 	}
+	public String getNombreAccion() {
+		return nombreAccion;
+	}
+	public void setNombreAccion(String nombreAccion){
+		this.nombreAccion = nombreAccion;
+	}
 	
 	/* Metodos particulares */
 	public void introducir_variable(String nombre, Tipo_variable tipo_var, int nivel){
@@ -84,18 +89,19 @@ public class Simbolo {
 		this.nivel = nivel;
 	}
 	
-	public void introducir_parametro(String nombre, Tipo_variable tipo_var, Clase_parametro clas_par, int nivel){
+	public void introducir_parametro(String nombre, Tipo_variable tipo_var, Clase_parametro clas_par, int nivel, String nombreAccion){
 		this.nombre = nombre;
 		this.tipo = Tipo_simbolo.PARAMETRO;
 		this.variable = tipo_var;
 		this.parametro = clas_par;
 		this.nivel = nivel;
+		this.nombreAccion = nombreAccion;
 	}
 	
-	public void introducir_accion(String nombre, int nivel){
+	public void introducir_accion(String nombre, int nivel, ArrayList<Simbolo> lista_parametros){
 		this.nombre = nombre;
 		this.tipo = Tipo_simbolo.ACCION;
-//		this.lista_parametros = lista_parametros;
+		this.lista_parametros = lista_parametros;
 		this.nivel = nivel;
 	}
 	

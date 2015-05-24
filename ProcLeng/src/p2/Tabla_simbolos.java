@@ -121,7 +121,7 @@ public class Tabla_simbolos {
 	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre, devuelve null.
 	 * De lo contrario, introduce un simbolo accion con los datos de los argumentos.
 	 */
-	public Simbolo introducir_accion(String nombre, int nivel, int dir){
+	public Simbolo introducir_accion(String nombre, int nivel, int dir, ArrayList<Simbolo> listaParam){
 		int entrada;
 		entrada = 0;			//PEARSON
 		Simbolo s = null;
@@ -130,7 +130,7 @@ public class Tabla_simbolos {
 			
 			/* Si no existe un simbolo con el mismo nombre y nivel */
 			s = new Simbolo();
-			s.introducir_accion(nombre, nivel);
+			s.introducir_accion(nombre, nivel, listaParam);
 			if(tabla[entrada] == null || tabla[entrada].size()==0){	
 				
 				/* Nodo vacio -> Insercion inmediata */
@@ -156,7 +156,7 @@ public class Tabla_simbolos {
 	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre, devuelve null.
 	 * De lo contrario, introduce un simbolo accion con los datos de los argumentos.
 	 */
-	public Simbolo introducir_parametro(String nombre, Tipo_variable variable, Clase_parametro parametro, int nivel, int dir){
+	public Simbolo introducir_parametro(String nombre, Tipo_variable variable, Clase_parametro parametro, int nivel, int dir, String nombreAccion){
 		int entrada;
 		entrada = 0;			//PEARSON
 		Simbolo s = null;
@@ -165,7 +165,7 @@ public class Tabla_simbolos {
 			
 			/* Si no existe un simbolo con el mismo nombre y nivel */
 			s = new Simbolo();
-			s.introducir_parametro(nombre, variable, parametro, nivel);
+			s.introducir_parametro(nombre, variable, parametro, nivel, nombreAccion);
 			if(tabla[entrada] == null || tabla[entrada].size()==0){	
 				
 				/* Nodo vacio -> Insercion inmediata */
@@ -252,6 +252,104 @@ public class Tabla_simbolos {
 						/* Parametro encontrado en el nivel pedido -> Ocultamos */
 						s.setVisible(false);
 					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Elimina de la tabla todos los parametros que hayan sido ocultados previamente
+	 */
+	public void eliminar_parametros_ocultos(int nivel){
+		for (int i = 0; i < MAX; i++){
+			if(!(tabla[i] == null || tabla[i].size() == 0)){
+				
+				/* Lista con simbolos */
+				List<Simbolo> l = tabla[i];
+				Iterator<Simbolo> it = l.iterator();
+				while(it.hasNext()){
+					Simbolo s = it.next();
+					if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNivel()== nivel && !s.isVisible()) {
+						eliminar_accion(s.getNombreAccion(), nivel);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Elimina de la tabla todos los procedimientos de un nivel.
+	 */
+	public void eliminar_acciones(int nivel){
+		for (int i = 0; i < MAX; i++){
+			if(!(tabla[i] == null || tabla[i].size() == 0)){
+				
+				/* Lista con simbolos */
+				List<Simbolo> l = tabla[i];
+				Iterator<Simbolo> it = l.iterator();
+				while(it.hasNext()){
+					Simbolo s = it.next();
+					if(s.getTipo().equals(Tipo_simbolo.ACCION) && s.getNivel()== nivel) {
+						
+						/* Eliminar parametros */
+						ArrayList<Simbolo> parametros = s.getLista_parametros();
+						Iterator<Simbolo> it_param = parametros.iterator();
+						while(it_param.hasNext()){
+							Simbolo param = it_param.next();
+							eliminar_parametro(param.getNombre(), param.getNivel());
+						}
+						
+						/* Eliminar accion */
+						l.remove(s);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Elimina de la tabla la accion con el nombre y el nivel pasado como parametro. Ademas,
+	 * elimina los parametros asociados a esa accion
+	 */
+	private void eliminar_accion(String nombre, int nivel){
+		int i = 0; //Pearson
+		
+		if(!(tabla[i] == null || tabla[i].size() == 0)){
+			List<Simbolo> l = tabla[i];
+			Iterator<Simbolo> it = l.iterator();
+			while(it.hasNext()){
+				Simbolo s = it.next();
+				if(s.getTipo().equals(Tipo_simbolo.ACCION) && s.getNombre().equals(nombre)
+						&& s.getNivel()==nivel){
+					
+					ArrayList<Simbolo> parametros = s.getLista_parametros();
+					Iterator<Simbolo> it_param = parametros.iterator();
+					while(it_param.hasNext()){
+						Simbolo param = it_param.next();
+						eliminar_parametro(param.getNombre(), param.getNivel());
+					}
+					/* Parametro a eliminar */
+					l.remove(s);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Elimina de la tabla el parametro con el nombre y el nivel pasado como parametros.
+	 */
+	private void eliminar_parametro(String nombre, int nivel){
+		int i = 0; //Pearson
+		
+		if(!(tabla[i] == null || tabla[i].size() == 0)){
+			List<Simbolo> l = tabla[i];
+			Iterator<Simbolo> it = l.iterator();
+			while(it.hasNext()){
+				Simbolo s = it.next();
+				if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNombre().equals(nombre) && s.getNivel()==nivel){
+					
+					/* Parametro a eliminar */
+					l.remove(s);
 				}
 			}
 		}
