@@ -1,0 +1,506 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options{  static = true;
+  Ignore_case = true;}PARSER_BEGIN(minilengcompiler)package p2;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Scanner;
+import p2.Constants;
+
+public class minilengcompiler{
+	static Token ultTk;
+  
+  public static void main(String args []) throws ParseException  {
+    boolean debug = false;
+    boolean debugSintactico = false;
+    minilengcompiler parser = null;
+
+    Token ultTok;
+
+    if(args.length == 0)    {    	parser = new minilengcompiler(System.in);
+    	System.out.println("Leyendo de la entrada estandar...");
+    }
+    else if(args.length == 1)    {
+      if(args[0].compareToIgnoreCase("-lex_stats") == 0)      {
+		parser = new minilengcompiler(System.in);
+		System.out.println("Leyendo de la entrada estandar... (Modo debug lexico)");
+		debug = true;      }
+
+      else if(args[0].compareToIgnoreCase("-syntax_stats") == 0)      {
+        parser = new minilengcompiler(System.in);
+        System.out.println("Leyendo de la entrada estandar... (Modo debug sintactico)");
+        debugSintactico = true;
+      }	  else	  {
+	    try	    {			parser = new minilengcompiler(new FileInputStream(args[0]));
+			System.out.println("Leyendo de fichero...");
+		}
+		catch(IOException e)		{
+		  	System.out.println("Error:fichero no encontrado");
+		  	System.exit(0);		}
+	  }
+    }
+    else if(args.length == 2)    {
+      	if(args[0].compareToIgnoreCase("-lex_stats") == 0)      	{
+      	  try      	  {			parser = new minilengcompiler(new FileInputStream(args[1]));
+			System.out.println("Leyendo de fichero... (Modo debug lexico)");
+			debug = true;
+		  }
+		  catch(IOException e)
+		  {
+		  	System.out.println("Error: error de e/s con el fichero");
+		  	System.exit(1);
+		  }
+      	}
+      	else if(args[0].compareToIgnoreCase("-syntax_stats") == 0)      	{
+      	  try
+      	  {
+			parser = new minilengcompiler(new FileInputStream(args[1]));
+			System.out.println("Leyendo de fichero... (Modo debug sintactico)");
+			debugSintactico = true;
+		  }
+		  catch(IOException e)
+		  {
+		  	System.out.println("Error: error de e/s con el fichero");
+		  	System.exit(1);
+		  }      	}
+      	else      	{			System.out.println("Error: Argumentos inválidos");
+			System.exit(1);
+      	}    }
+    else    {		System.out.println("Error: Argumentos inválidos");
+		System.exit(1);
+    }	while (true)	{	    try	    {   			if (minilengcompiler.compile() == 1)        	{     		 System.out.println("Fin.");   		     break;	        }  		}  		catch (Exception e)  		{
+  		  	Scanner error = new Scanner(e.getMessage());
+  		  	error.useDelimiter(",|\\.| |\"");
+  		  	error.next();error.next();error.next();  		  	String tipoEncontrado = error.next();
+  		  	if(tipoEncontrado.equals(""))  		  	{
+				tipoEncontrado = "\" \"";
+  		  	}
+  		  	while(!error.hasNextInt())  		  	{				error.next();
+  		  	}
+  		  	int linea = error.nextInt();
+  		  	while(!error.hasNextInt())
+  		  	{
+				error.next();
+  		  	}  		  	int columna = error.nextInt();  		  	error.nextLine();error.nextLine();  		  	String mensaje = "";  		  	while(error.hasNextLine())  		  	{				mensaje = mensaje + "%n" + error.nextLine();  		  	}  		  	error.close();  		  	System.out.printf("ERROR SINTÁCTICO (<%d,%d>): se ha reconocido un %s cuando se esperaba:",linea,columna,tipoEncontrado);
+  		  	System.out.printf(mensaje);    		System.exit(0);      }      catch (Error e)      {
+        Scanner error = new Scanner(e.getMessage());
+        error.useDelimiter(",|\\.| |\"");
+        error.next();error.next();error.next();error.next();        int linea = error.nextInt();        error.next();error.next();        int columna = error.nextInt();
+        error.next();error.next();error.next();error.next();
+        String simbolo = error.next();
+        error.close();
+        System.out.printf("ERROR LÉXICO (<%d,%d>): símbolo no reconocido: <%s>%n",linea,columna,simbolo);
+        System.exit(0);      }    }
+    if(debug)    {
+      Constants.printLexical();
+          }
+    else if(debugSintactico)    {
+      Constants.printSyntactic();
+    }  }}PARSER_END(minilengcompiler)
+
+TOKEN : /* Palabras reservadas */
+{
+  < tPROGRAMA : "programa" >
+| < tFINPROGRAMA : "finprograma" >
+| < tVAR : "var" >
+| < tAND : "and" >
+| < tOR : "or" >
+| < tNOT : "not" >
+| < tPRINCIPIO : "principio" >
+| < tFIN : "fin" >
+| < tSI : "si" >
+| < tENT : "ent" >
+| < tSI_NO : "si_no" >
+| < tFSI : "fsi" >
+| < tMQ : "mq" >
+| < tFMQ : "fmq" >
+| < tESCRIBIR : "escribir" >
+| < tLEER : "leer" >
+| < tMOD : "mod" >
+| < tDIV : "div" >
+| < tENTERO : "entero" >
+| < tBOOLEANO : "booleano" >
+| < tCARACTER : "caracter" >
+| < tTRUE : "true" >
+| < tFALSE : "false" >
+| < tENTACAR : "entacar" >
+| < tCARAENT : "caraent" >
+| < tACCION : "accion" >
+| < tVAL : "val" >
+| < tREF : "ref" >
+| < tMAYOR : ">" >
+| < tMENOR : "<" >
+| < tIGUAL : "=" >
+| < tMAI : ">=" >
+| < tMEI : "<=" >
+| < tNI : "<>" >
+| < tOPAS : ":=" >
+| < tALM : "#" >
+} SKIP :{  " "| "\r"| "\t"| "\n"
+|  <"%" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>					/* Comentario unilinea */
+|  <"%%" (~["%"])* "%" ("*" | ~["%","/"] (~["%"])* "%")* "%">   /* Comentario multilinea */}
+TOKEN :	/* Identificador */
+{
+  < tIDENTIFICADOR : ((< tLETRA >|"_")(< tLETRA >|< tNUMERO >| "_")*(< tLETRA > | < tNUMERO >))|(< tLETRA >) >
+| < #tLETRA: ["a"-"z"] >
+}
+
+TOKEN : /* Caracter */
+{
+	< tCARAC : < tCOMILLA >(~["\""])< tCOMILLA > >
+}
+
+TOKEN : /* Cadena */
+{
+	< tCADENA : <tCOMILLA >(~["\""])*< tCOMILLA > >
+}
+
+TOKEN : /* Palabra */
+{
+  < tPALABRA : (["a"-"z"])+ >
+}
+TOKEN : /* OPERATORS */{  < tMAS : "+" >| < tMENOS : "-" >| < tPOR : "*" >| < tDIVISION : "/" >}TOKEN :{  < tNUMERO : (< DIGIT >)+ >| < #DIGIT : [ "0"-"9" ] >}
+
+TOKEN : /* Literales */
+{
+  < tCOMILLA : "\"" >
+| < tPARIZQ : "(" >
+| < tPARDER : ")" >
+| < tCOMA : "," >
+| < tPUNTCOM : ";" >
+}
+
+int compile() :
+{}
+{
+  programa()  {    return 0;  }| ("#"
+| < EOF >)  {  return 1;
+  }
+}
+
+//void token() ://{}//{//  ultTk = < tPROGRAMA >//  {numPrograma++;}//| ultTk = < tFINPROGRAMA >//  {numFinPrograma++;}//| ultTk = < tVAR >//  {numVar++;}//| ultTk = < tAND >//  {numAnd++;}//| ultTk = < tOR >//  {numOr++;}//| ultTk = < tNOT >//  {numNot++;}//| ultTk = < tPRINCIPIO >//  {numPrincipio++;}//| ultTk = < tFIN  >//  {numFin++;}//| ultTk = < tSI >//  {numSi++;}//| ultTk = < tENT >//  {numEnt++;}//| ultTk = < tSI_NO >//  {numSi_No++;}//| ultTk = < tFSI >//  {numFSI++;}//| ultTk = < tMQ >//  {numMQ++;}//| ultTk = < tFMQ >//  {numFMQ++;}//| ultTk = < tESCRIBIR >//  {numEscribir++;}//| ultTk = < tLEER >//  {numLeer++;}//| ultTk = < tMOD >//  {numMod++;}//| ultTk = < tDIV >//  {numDiv++;}//| ultTk = < tENTERO >//  {numEntero++;}//| ultTk = < tBOOLEANO >//  {numBooleano++;}//| ultTk = < tCARACTER >//  {numCaracter++;}//| ultTk = < tTRUE >//  {numTrue++;}//| ultTk = < tFALSE >//  {numFalse++;}//| ultTk = < tENTACAR >//  {numEntacar++;}//| ultTk = < tCARAENT >//  {numCaraent++;}//| ultTk = < tACCION >//  {numAccion++;}//| ultTk = < tVAL >//  {numVal++;}//| ultTk = < tREF >//  {numRef++;}//| ultTk = < tMAYOR >//  {numMayor++;}//| ultTk = < tMENOR >//  {numMenor++;}//| ultTk = < tIGUAL >//  {numIgual++;}//| ultTk = < tMAI >//  {numMai++;}//| ultTk = < tMEI >//  {numMei++;}//| ultTk = < tNI >//  {numNi++;}//| ultTk = < tOPAS >//  {numOpas++;}//| ultTk = < tIDENTIFICADOR >//  {numIdentificador++;}//| ultTk = < tCARAC >//  {numCarac++;}//| ultTk = < tCADENA >//  {numCadena++;}//| ultTk = < tNUMERO >//  {numNumero++;}//| ultTk = < tMAS >//  {numMas++;}//| ultTk = < tMENOS >//  {numMenos++;}//| ultTk = < tPOR >//  {numPor++;}//| ultTk = < tDIVISION >//  {numDivision++;}//| ultTk = < tPARIZQ >//  {numPariz++;}//| ultTk = < tPARDER >//  {numParder++;}//| ultTk = < tCOMA >//  {numComa++;}//| ultTk = < tPUNTCOM >//  {numPuntcom++;}//}
+
+/*
+* Programa ::= <tPROGRAMA> <tIDENTIFICADOR> ";"
+* declaracion_variables declaracion_acciones
+* bloque_sentencias
+*/
+void programa() :
+{}
+{
+  < tPROGRAMA >{Constants.numPrograma++;} < tIDENTIFICADOR >
+  {Constants.numIdentificador++;}< tPUNTCOM >
+  declaracion_variables() declaracion_acciones()
+  bloque_sentencias()}
+
+/* declaracion_variables ::= ( declaracion ";" )* */
+void declaracion_variables() :
+{}
+{
+  ( declaracion() < tPUNTCOM > )*
+}
+
+/* declaración ::= tipo_variables identificadores */
+void declaracion() :
+{}
+{
+  tipo_variables() identificadores()
+  {Constants.numVariables++;}
+}
+
+/*tipo_variables ::= <tENTERO> | <tCARACTER> | <tBOOLEANO> */
+void tipo_variables() :
+{}
+{
+  < tENTERO >{Constants.numEntero++;}
+| < tCARACTER >{Constants.numCaracter++;}
+| < tBOOLEANO >{Constants.numBooleano++;}
+}
+
+/*identificadores ::= <tIDENTIFICADOR> ( "," <tIDENTIFICADOR> )* */
+void identificadores() :
+{}
+{
+  < tIDENTIFICADOR >{Constants.numIdentificador++;}
+  ( "," <tIDENTIFICADOR >{Constants.numIdentificador++;} )*
+}
+
+/*declaracion_acciones ::= ( declaracion_accion )* */
+void declaracion_acciones() :
+{}
+{
+  ( declaracion_accion() )*
+}
+
+/* declaracion_accion ::= cabecera_accion ";"
+ * declaracion_variables declaracion_acciones bloque_sentencias
+ */
+void declaracion_accion() :
+{}
+{  cabecera_accion() < tPUNTCOM >
+  declaracion_variables() declaracion_acciones() bloque_sentencias()
+  {Constants.numAcciones++;}    
+}
+
+/* cabecera_accion ::= <tACCION> <tIDENTIFICADOR> parametros_formales */
+void cabecera_accion() :
+{}
+{
+  < tACCION >{Constants.numAccion++;} < tIDENTIFICADOR >
+  {Constants.numIdentificador++;} parametros_formales()
+}
+
+/* parametros_formales ::= ( "(" ( parametros ( ";" parametros )* )* ")" )? */
+void parametros_formales() :
+{}
+{
+  ( < tPARIZQ >{Constants.numPariz++;}( parametros()
+  ( ";" parametros() )* )*< tPARDER >{Constants.numParder++;} )?
+}
+
+/*lista_parametros ::= identificadores */
+void lista_parametros() :
+{}
+{  identificadores()
+}
+
+/* parámetros ::= clase_parametros tipo_variables lista_parametros */
+void parametros() :
+{}
+{
+  clase_parametros() tipo_variables() lista_parametros()
+  {Constants.numParametros++;}
+}
+
+/* clase_parametros ::= <tVAL> | <tREF> */
+void clase_parametros() :
+{}
+{  < tVAL >{Constants.numVal++;}
+| < tREF >{Constants.numRef++;}}
+/* bloque_sentencias ::= <tPRINCIPIO> lista_sentencias <tFIN> */
+void bloque_sentencias() :
+{}
+{
+  < tPRINCIPIO >{Constants.numPrincipio++;} lista_sentencias()
+   < tFIN >{Constants.numFin++;}
+}
+
+/*lista_sentencias ::= ( sentencia )* */
+void lista_sentencias() :
+{}
+{
+  ( sentencia() )*
+}
+
+/*
+* sentencia ::= leer ";"
+*| escribir ";"
+*| < tIDENTIFICADOR > asig_o_inv
+*| selección
+*| mientras_que
+*/
+void sentencia() :
+{}
+{
+  leer() < tPUNTCOM >
+| escribir() < tPUNTCOM >
+| < tIDENTIFICADOR >{Constants.numIdentificador++;} asig_o_inv()
+| seleccion()
+| mientras_que()
+}
+
+/*leer ::= <tLEER> "(" lista_asignables ")" */
+void leer() :
+{}
+{
+  < tLEER >{Constants.numLeer++;} < tPARIZQ >{Constants.numPariz++;}
+   lista_asignables() < tPARDER >{Constants.numParder++;}
+}
+/*lista_asignables ::= identificadores */
+void lista_asignables() :
+{}
+{
+  identificadores()
+}
+
+/*escribir ::= <tESCRIBIR> "(" lista_escribibles ")" */
+void escribir() :
+{}
+{
+  < tESCRIBIR >{Constants.numEscribir++;} < tPARIZQ >{Constants.numPariz++;}
+   lista_escribibles() < tPARDER >{Constants.numParder++;}
+  {Constants.numOpEscribir++;}
+}
+
+/*lista_escribibles ::= expresion ( "," expresion )* */
+void lista_escribibles() :
+{}
+{
+  expresion() ( "," expresion() )*
+}
+
+/*asig_o_inv ::= asignación | invocacion_accion*/
+void asig_o_inv() :
+{}
+{
+  asignacion()
+| invocacion_accion()
+}
+
+/*asignación ::= <tOPAS> expresion ";" */
+void asignacion() :
+{}
+{
+  <tOPAS >{Constants.numOpas++;} expresion() < tPUNTCOM >
+  {Constants.numAsignar++;}
+}
+
+/*invocacion_accion ::= argumentos ";" */
+void invocacion_accion() :
+{}
+{
+  argumentos() < tPUNTCOM >
+  {Constants.numInvocar++;}
+}
+
+/*mientras_que ::= <tMQ> expresión lista_sentencias <tFMQ> */
+void mientras_que() :
+{}
+{
+  < tMQ >{Constants.numMQ++;} expresion() lista_sentencias() < tFMQ >
+  {Constants.numFMQ++;}
+  {Constants.numBucles++;}
+}
+
+/*selección ::= < tSI > "(" expresion ")" < tENT > lista_sentencias ( < tSI_NO > lista_sentencias )?  < tFSI > */
+void seleccion() :
+{}
+{
+  < tSI >{Constants.numSi++;} expresion() < tENT > lista_sentencias()
+  ( < tSI_NO >{Constants.numSi_No++;} lista_sentencias() )? < tFSI >
+  {Constants.numFSI++;}
+  {Constants.numif++;}
+}
+
+/*argumentos ::= ( "(" ( lista_expresiones )? ")" )? */
+void argumentos() :
+{}
+{
+  (< tPARIZQ >{Constants.numPariz++;} ( lista_expresiones() )? < tPARDER >
+  {Constants.numParder++;})?
+}
+
+/*lista_expresiones ::= expresión ( "," expresión )* */
+void lista_expresiones() :
+{}
+{
+  expresion() ( "," expresion() )*
+}
+
+/*expresión ::= expresion_simple ( operador_relacional expresion_simple)? */
+void expresion() :
+{}
+{
+  expresion_simple() ( operador_relacional() expresion_simple() )?
+  {Constants.numExpresiones++;} 
+}
+
+/*
+*operador_relacional ::= < tMAYOR >
+*| < tMENOR >
+*| < tIGUAL >
+*| < tMAI >
+*| < tMEI >
+*| < tNI >
+*/
+void operador_relacional() :
+{}
+{
+  (< tMAYOR >{Constants.numMayor++;}
+| < tMENOR >{Constants.numMenor++;}
+| < tIGUAL >{Constants.numIgual++;}
+| < tMAI >{Constants.numMai++;}
+| < tMEI >{Constants.numMei++;}
+| < tNI >{Constants.numNi++;})
+	{Constants.numOpRel++;}
+}
+
+/*expresion_simple ::= termino ( operador_aditivo termino )* */
+void expresion_simple() :
+{}
+{
+  termino() ( operador_aditivo() termino() )*
+  {Constants.numExpresionesS++;}
+}
+
+/* operador_aditivo ::= < tMAS >
+ *| < tMENOS >
+ *| < tOR >
+ */
+void operador_aditivo() :
+{}
+{
+  (< tMAS >{Constants.numMas++;}
+| < tMENOS >{Constants.numMenos++;}
+| < tOR >{Constants.numOr++;})
+{Constants.numOpAdd++;}
+}
+
+/*termino ::= factor ( operador_multiplicativo factor )* */
+void termino() :
+{}
+{
+  factor() ( operador_multiplicativo() factor() )*
+  {Constants.numTermino++;}
+}
+
+/* operador_multiplicativo ::= < tPOR >
+ *| < tDIVISION >
+ *| < tAND >
+ *| < tMOD >
+ *| < tDIV >
+ */
+void operador_multiplicativo() :
+{}
+{
+  (< tPOR >{Constants.numPor++;}
+| < tDIVISION >{Constants.numDivision++;}
+| < tAND >{Constants.numAnd++;}
+| < tMOD >{Constants.numMod++;}
+| < tDIV >{Constants.numDiv++;})
+{Constants.numOpMul++;}
+}
+
+/*
+ *factor ::= "-" factor
+ *| <tNOT> factor
+ *| "(" expresion ")"
+ *| <tENTACAR> "(" expresion ")"
+ *| <tCARAENT> "(" expresion ")"
+ *| <tIDENTIFICADOR>
+ *| <tCONSTENTERA>
+ *| <tCONSTCHAR>
+ *| <tCONSTCAD>
+ *| <tTRUE>
+ *| <tFALSE>
+ */
+void factor() :
+{}
+{
+  (    "-" factor()
+| < tNOT >{Constants.numNot++;} factor()
+| < tENTACAR >{Constants.numEntacar++;} < tPARIZQ >{Constants.numPariz++;}
+expresion() < tPARDER >{Constants.numParder++;}
+| < tCARAENT >{Constants.numCaraent++;} < tPARIZQ >{Constants.numPariz++;}
+ expresion() < tPARDER >{Constants.numParder++;}
+| < tIDENTIFICADOR >{Constants.numIdentificador++;}
+| < tNUMERO >{Constants.numNumero++;}
+| < tCARAC >{Constants.numCarac++;}
+| < tCADENA >{Constants.numCadena++;}
+| < tTRUE >{Constants.numTrue++;}
+| < tFALSE >{Constants.numFalse++;}
+| < tPARIZQ >{Constants.numPariz++;} expresion() < tPARDER >{Constants.numParder++;})
+{Constants.numFactor++;}
+}
+
