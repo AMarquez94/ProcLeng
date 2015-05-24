@@ -358,7 +358,8 @@ public class Tabla_simbolos {
 	
 	
 	/**
-	 * Devuelve true si existe un simbolo en el mismo nivel y con el mismo nombre que los parametros dados
+	 * Devuelve true si existe un simbolo en el mismo nivel y con el 
+	 * mismo nombre que los parametros dados
 	 */
 	private boolean esta(String nombre, int nivel){
 		int entrada;
