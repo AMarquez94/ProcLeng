@@ -1,0 +1,100 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options{	LOOKAHEAD=1;
+}
+PARSER_BEGIN(Calculadora)
+	package practica0.ej1;
+	public class Calculadora	{		public static void main(String args[]) throws ParseException		{
+			Calculadora parser = new Calculadora(System.in);
+			while(true)			{				System.out.print("Introduzca una expresion: ");
+				System.out.flush();
+				try				{					switch(parser.one_line())					{						case -1:
+						System.exit(0);
+						default:
+						break;
+					}
+				}
+				catch (ParseException x)				{					System.out.println("Finalizando.");
+					throw x;
+				}
+			}
+		}
+	}
+PARSER_END(Calculadora)
+
+SKIP:
+{
+  " "
+| "\r"
+| "\t"
+}
+
+//Comentarios
+
+SKIP:
+{	"/*":EntreComentarios
+}
+
+< EntreComentarios > SKIP:
+{
+  	"*/": DEFAULT}
+
+< EntreCoentarios > MORE:
+{	< ~[] >
+}
+
+//Cadena de caracteres.
+TOKEN_MGR_DECLS:
+{  int longitudDeCadena;
+}
+
+MORE:
+{	"\"" {longitudDeCadena=0;}: EntreComillas
+}
+
+< EntreComillas >TOKEN:{< STRLIT:"\"" >{System.out.println("Size="+longitudDeCadena);}:DEFAULT}
+
+< EntreComillas > MORE:{  < ~["\n","\r"] > {longitudDeCadena++;}
+}
+TOKEN:
+{
+	< EOL: "\n" >
+}
+
+TOKEN: /*OPERADORES*/
+{	< MAS:"+" >
+| 	< MENOS: "-" >
+| 	< POR: "*" >
+| 	< ENTRE:"/" >
+| 	< IGUAL:"=" >
+}
+
+TOKEN:
+{  < CONSTANTE:(< DIGITO >)+ >
+| < #DIGITO:["0" - "9"] >
+}
+
+int one_line() :
+{}
+{  suma()< EOL >  {    return 1;  }| < EOL >{  return 0;}| < EOF >{  return -1;}}
+
+void suma():
+{}
+{  termino()((< MAS >|< MENOS >)termino())*
+}
+
+void termino():
+{}{
+  unario()((< POR >|< ENTRE >)unario())*}
+
+void unario():
+{}
+{  < MENOS > elemento()
+| elemento()
+}
+
+void elemento():
+{}
+{  < CONSTANTE >
+| "(" suma()")"
+}

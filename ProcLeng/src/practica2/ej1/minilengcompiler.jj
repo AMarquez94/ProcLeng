@@ -1,0 +1,159 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+
+ options{  static = true;
+  Ignore_case = true;}PARSER_BEGIN(minilengcompiler)package practica2.ej1;
+
+import java.io.*;
+public class minilengcompiler{
+  public static void main(String args []) throws ParseException  {
+    if(args.length == 0)    {
+      minilengcompiler parser = new minilengcompiler(System.in);
+      minilengcompiler.entrada();
+    }
+    else if (args.length == 1)    {	    try	    {			minilengcompiler parser = new minilengcompiler(new FileInputStream(args[0]));
+			System.out.println("Leyendo de fichero...");
+			switch (minilengcompiler.entrada())			{				case 0:
+					System.out.println("Todo ok");
+				case 1:
+			}
+	    }
+	    catch(Exception e)	    {
+	      	    }
+	  }    //    while (true)//    {//      System.out.println("Reading from standard input...");//      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");//      try//      {//        switch (minilengcompiler.one_line())//        {//          case 0 : //          System.out.println("No se han encontrado errores.");//          break;//          case 1 : //          System.out.println("Ta lue.");//          break;//          default : //          break;//        }//      }//      catch (Exception e)//      {//        System.out.println("NOK.");//        System.out.println(e.getMessage());//        minilengcompiler.ReInit(System.in);//      }//      catch (Error e)//      {//        System.out.println("Oops.");//        System.out.println(e.getMessage());//        break;//      }//    }  }}PARSER_END(minilengcompiler)
+
+/****************************************
+*			Palabras reservadas			*
+****************************************/
+
+TOKEN :
+{
+  < tPROGRAMA : "programa" >
+| < tFINPROGRAMA : "finprograma" >
+| < tVAR : "var" >
+| < tAND : "and" >
+| < tOR : "or" >
+| < tNOT : "not" >
+| < tPRINCIPIO : "principio" >
+| < tFIN : "fin" >
+| < tSI : "si" >
+| < tENT : "ent" >
+| < tSI_NO : "si_no" >
+| < tFSI : "fsi" >
+| < tMQ : "mq" >
+| < tFMQ : "fmq" >
+| < tESCRIBIR : "escribir" >
+| < tLEER : "leer" >
+| < tMOD : "mod" >
+| < tDIV : "div" >
+| < tENTERO : "entero" >
+| < tBOOLEANO : "booleano" >
+| < tCARACTER : "caracter" >
+| < tTRUE : "true" >
+| < tFALSE : "false" >
+| < tENTACAR : "entacar" >
+| < tCARAENT : "caraent" >
+| < tACCION : "accion" >
+| < tVAL : "val" >
+| < tREF : "ref" >
+| < tMAYOR : ">" >
+| < tMENOR : "<" >
+| < tIGUAL : "=" >
+| < tMAI : ">=" >
+| < tMEI : "<=" >
+| < tNI : "<>" >
+| < tOPAS : ":=" >
+| < tALM : "#" >} SKIP :{  " "| "\r"| "\t"| "\n"
+|  <"%" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>					/* Comentario unilinea */
+|  <"%%" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "%")* "%">   /* Comentario multilinea */
+}
+TOKEN :	/* Identificador */
+{
+  < tIDENTIFICADOR : ((< tLETRA >|"_")(< tLETRA >|< tNUMERO >| "_")*(< tLETRA > | < tNUMERO >))|(< tLETRA >) >
+| < #tLETRA: ["a"-"z"] >
+}
+
+TOKEN : /* Caracter */
+{	< tCARAC : < tCOMILLA >(~["\""])< tCOMILLA > >
+}
+
+TOKEN : /* Cadena */
+{	< tCADENA : <tCOMILLA >(~["\""])*< tCOMILLA > >
+}
+TOKEN : /* Palabra */{  < tPALABRA : (["a"-"z"])+ >}TOKEN : /* Constante numerica */{  < tNUMERO : (["0" - "9"])+ >}
+
+TOKEN : /* Operadores */
+{
+  < tMAS : "+" >
+| < tMENOS : "-" >
+| < tPOR : "*" >
+| < tDIVISION : "/" >
+  }
+
+TOKEN : /* Literales */
+{
+  < tCOMILLA : "\"" >
+| < tPARIZQ : "(" >
+| < tPARDER : ")" >
+| < tCOMA : "," >
+| < tPUNTCOM : ";" >}
+
+int entrada() :
+{}
+{  ( token() )* < tALM >  {return 0;}
+}
+
+int token() :
+{}
+{(  < tPROGRAMA >
+| < tFINPROGRAMA >
+| < tVAR >
+| < tAND >
+| < tOR >
+| < tNOT >
+| < tPRINCIPIO >
+| < tFIN  >
+| < tSI >
+| < tENT >
+| < tSI_NO >
+| < tFSI >
+| < tMQ >
+| < tFMQ >
+| < tESCRIBIR >
+| < tLEER >
+| < tMOD >
+| < tDIV >
+| < tENTERO >
+| < tBOOLEANO >
+| < tCARACTER >
+| < tTRUE >
+| < tFALSE >
+| < tENTACAR >
+| < tCARAENT >
+| < tACCION >
+| < tVAL >
+| < tREF >
+| < tMAYOR >
+| < tMENOR >
+| < tIGUAL >
+| < tMAI >
+| < tMEI >
+| < tNI >
+| < tOPAS >
+| < tIDENTIFICADOR >
+| < tCARAC >
+| < tCADENA >
+| < tNUMERO >
+| < tMAS >
+| < tMENOS >
+| < tPOR >
+| < tDIVISION >
+| < tPARIZQ >
+| < tPARDER >
+| < tCOMA >
+| < tPUNTCOM >
+)
+{
+   {return 0;}}
+}
