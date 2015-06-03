@@ -156,7 +156,7 @@ public class Tabla_simbolos {
 	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre, devuelve null.
 	 * De lo contrario, introduce un simbolo accion con los datos de los argumentos.
 	 */
-	public Simbolo introducir_parametro(String nombre, Tipo_variable variable, Clase_parametro parametro, int nivel, int dir, String nombreAccion){
+	public Simbolo introducir_parametro(String nombre, Tipo_variable variable, Clase_parametro parametro, int nivel, int dir){
 		int entrada;
 		entrada = 0;			//PEARSON
 		Simbolo s = null;
@@ -165,7 +165,7 @@ public class Tabla_simbolos {
 			
 			/* Si no existe un simbolo con el mismo nombre y nivel */
 			s = new Simbolo();
-			s.introducir_parametro(nombre, variable, parametro, nivel, nombreAccion);
+			s.introducir_parametro(nombre, variable, parametro, nivel);
 			if(tabla[entrada] == null || tabla[entrada].size()==0){	
 				
 				/* Nodo vacio -> Insercion inmediata */
@@ -236,48 +236,6 @@ public class Tabla_simbolos {
 	}
 	
 	/**
-	 * Marca todos los parametros de un nivel como ocultos para que no puedan ser encontrados
-	 */
-	public void ocultar_parametros(int nivel){
-		for (int i = 0; i < MAX; i++) {
-			if(!(tabla[i] == null || tabla[i].size() == 0)){
-				
-				/* Lista con simbolos */
-				List<Simbolo> l = tabla[i];
-				Iterator<Simbolo> it = l.iterator();
-				while(it.hasNext()){
-					Simbolo s = it.next();
-					if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNivel()== nivel){
-						
-						/* Parametro encontrado en el nivel pedido -> Ocultamos */
-						s.setVisible(false);
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Elimina de la tabla todos los parametros que hayan sido ocultados previamente
-	 */
-	public void eliminar_parametros_ocultos(int nivel){
-		for (int i = 0; i < MAX; i++){
-			if(!(tabla[i] == null || tabla[i].size() == 0)){
-				
-				/* Lista con simbolos */
-				List<Simbolo> l = tabla[i];
-				Iterator<Simbolo> it = l.iterator();
-				while(it.hasNext()){
-					Simbolo s = it.next();
-					if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNivel()== nivel && !s.isVisible()) {
-						eliminar_accion(s.getNombreAccion(), nivel);
-					}
-				}
-			}
-		}
-	}
-	
-	/**
 	 * Elimina de la tabla todos los procedimientos de un nivel.
 	 */
 	public void eliminar_acciones(int nivel){
@@ -311,7 +269,7 @@ public class Tabla_simbolos {
 	 * Elimina de la tabla la accion con el nombre y el nivel pasado como parametro. Ademas,
 	 * elimina los parametros asociados a esa accion
 	 */
-	private void eliminar_accion(String nombre, int nivel){
+	public void eliminar_accion(String nombre, int nivel){
 		int i = 0; //Pearson
 		
 		if(!(tabla[i] == null || tabla[i].size() == 0)){
@@ -355,8 +313,6 @@ public class Tabla_simbolos {
 		}
 	}
 	
-	
-	
 	/**
 	 * Devuelve true si existe un simbolo en el mismo nivel y con el 
 	 * mismo nombre que los parametros dados
@@ -384,3 +340,45 @@ public class Tabla_simbolos {
 		return esta;
 	}
 }
+
+///**
+//* Marca todos los parametros de un nivel como ocultos para que no puedan ser encontrados
+//*/
+//public void ocultar_parametros(int nivel){
+//	for (int i = 0; i < MAX; i++) {
+//		if(!(tabla[i] == null || tabla[i].size() == 0)){
+//			
+//			/* Lista con simbolos */
+//			List<Simbolo> l = tabla[i];
+//			Iterator<Simbolo> it = l.iterator();
+//			while(it.hasNext()){
+//				Simbolo s = it.next();
+//				if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNivel()== nivel){
+//					
+//					/* Parametro encontrado en el nivel pedido -> Ocultamos */
+//					s.setVisible(false);
+//				}
+//			}
+//		}
+//	}
+//}
+
+///**
+//* Elimina de la tabla todos los parametros que hayan sido ocultados previamente
+//*/
+//public void eliminar_parametros_ocultos(int nivel){
+//	for (int i = 0; i < MAX; i++){
+//		if(!(tabla[i] == null || tabla[i].size() == 0)){
+//			
+//			/* Lista con simbolos */
+//			List<Simbolo> l = tabla[i];
+//			Iterator<Simbolo> it = l.iterator();
+//			while(it.hasNext()){
+//				Simbolo s = it.next();
+//				if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNivel()== nivel && !s.isVisible()) {
+//					eliminar_accion(s.getNombreAccion(), nivel);
+//				}
+//			}
+//		}
+//	}
+//}
