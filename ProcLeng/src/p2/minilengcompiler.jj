@@ -179,8 +179,6 @@ int compile() :
   }
 }
 
-//void token() ://{}//{//  ultTk = < tPROGRAMA >//  {numPrograma++;}//| ultTk = < tFINPROGRAMA >//  {numFinPrograma++;}//| ultTk = < tVAR >//  {numVar++;}//| ultTk = < tAND >//  {numAnd++;}//| ultTk = < tOR >//  {numOr++;}//| ultTk = < tNOT >//  {numNot++;}//| ultTk = < tPRINCIPIO >//  {numPrincipio++;}//| ultTk = < tFIN  >//  {numFin++;}//| ultTk = < tSI >//  {numSi++;}//| ultTk = < tENT >//  {numEnt++;}//| ultTk = < tSI_NO >//  {numSi_No++;}//| ultTk = < tFSI >//  {numFSI++;}//| ultTk = < tMQ >//  {numMQ++;}//| ultTk = < tFMQ >//  {numFMQ++;}//| ultTk = < tESCRIBIR >//  {numEscribir++;}//| ultTk = < tLEER >//  {numLeer++;}//| ultTk = < tMOD >//  {numMod++;}//| ultTk = < tDIV >//  {numDiv++;}//| ultTk = < tENTERO >//  {numEntero++;}//| ultTk = < tBOOLEANO >//  {numBooleano++;}//| ultTk = < tCARACTER >//  {numCaracter++;}//| ultTk = < tTRUE >//  {numTrue++;}//| ultTk = < tFALSE >//  {numFalse++;}//| ultTk = < tENTACAR >//  {numEntacar++;}//| ultTk = < tCARAENT >//  {numCaraent++;}//| ultTk = < tACCION >//  {numAccion++;}//| ultTk = < tVAL >//  {numVal++;}//| ultTk = < tREF >//  {numRef++;}//| ultTk = < tMAYOR >//  {numMayor++;}//| ultTk = < tMENOR >//  {numMenor++;}//| ultTk = < tIGUAL >//  {numIgual++;}//| ultTk = < tMAI >//  {numMai++;}//| ultTk = < tMEI >//  {numMei++;}//| ultTk = < tNI >//  {numNi++;}//| ultTk = < tOPAS >//  {numOpas++;}//| ultTk = < tIDENTIFICADOR >//  {numIdentificador++;}//| ultTk = < tCARAC >//  {numCarac++;}//| ultTk = < tCADENA >//  {numCadena++;}//| ultTk = < tNUMERO >//  {numNumero++;}//| ultTk = < tMAS >//  {numMas++;}//| ultTk = < tMENOS >//  {numMenos++;}//| ultTk = < tPOR >//  {numPor++;}//| ultTk = < tDIVISION >//  {numDivision++;}//| ultTk = < tPARIZQ >//  {numPariz++;}//| ultTk = < tPARDER >//  {numParder++;}//| ultTk = < tCOMA >//  {numComa++;}//| ultTk = < tPUNTCOM >//  {numPuntcom++;}//}
-
 /*
 * Programa ::= <tPROGRAMA> <tIDENTIFICADOR> ";"
 * declaracion_variables declaracion_acciones
@@ -203,10 +201,10 @@ void declaracion_variables() :
 
 /* declaración ::= tipo_variables identificadores */
 void declaracion() :
-{}
+{int numID = 0;}
 {
-  tipo_variables() identificadores()
-  {Constants.numVariables++;}
+  tipo_variables()  numID = identificadores()
+  {Constants.numVariables = Constants.numVariables + numID;}
 }
 
 /*tipo_variables ::= <tENTERO> | <tCARACTER> | <tBOOLEANO> */
@@ -219,11 +217,12 @@ void tipo_variables() :
 }
 
 /*identificadores ::= <tIDENTIFICADOR> ( "," <tIDENTIFICADOR> )* */
-void identificadores() :
-{}
+int identificadores() :
+{int numID = 0;}
 {
-  < tIDENTIFICADOR >{Constants.numIdentificador++;}
-  ( "," <tIDENTIFICADOR >{Constants.numIdentificador++;} )*
+  < tIDENTIFICADOR >{numID++; Constants.numIdentificador++;}
+  ( "," <tIDENTIFICADOR >{numID++; Constants.numIdentificador++;} )*
+  {return numID;}
 }
 
 /*declaracion_acciones ::= ( declaracion_accion )* */
@@ -260,17 +259,18 @@ void parametros_formales() :
 }
 
 /*lista_parametros ::= identificadores */
-void lista_parametros() :
-{}
-{  identificadores()
+int lista_parametros() :
+{int id = 0;}
+{  id = identificadores()
+  {return id;}
 }
 
 /* parámetros ::= clase_parametros tipo_variables lista_parametros */
 void parametros() :
-{}
+{int id = 0;}
 {
-  clase_parametros() tipo_variables() lista_parametros()
-  {Constants.numParametros++;}
+  clase_parametros() tipo_variables() id = lista_parametros()
+  {Constants.numParametros = Constants.numParametros + id;}
 }
 
 /* clase_parametros ::= <tVAL> | <tREF> */
@@ -286,11 +286,11 @@ void bloque_sentencias() :
    < tFIN >{Constants.numFin++;}
 }
 
-/*lista_sentencias ::= ( sentencia )* */
+/*lista_sentencias ::= ( sentencia )+ */
 void lista_sentencias() :
 {}
 {
-  ( sentencia() )*
+  ( sentencia() )+
 }
 
 /*
@@ -333,11 +333,11 @@ void escribir() :
   {Constants.numOpEscribir++;}
 }
 
-/*lista_escribibles ::= expresion ( "," expresion )* */
+/*lista_escribibles ::= (expresion | cadena) ( "," (expresion | cadena) )* */
 void lista_escribibles() :
 {}
 {
-  expresion() ( "," expresion() )*
+  (expresion() | cadena()) ( "," (expresion() | cadena()) )*
 }
 
 /*asig_o_inv ::= asignación | invocacion_accion*/
@@ -481,26 +481,29 @@ void operador_multiplicativo() :
  *| <tIDENTIFICADOR>
  *| <tCONSTENTERA>
  *| <tCONSTCHAR>
- *| <tCONSTCAD>
  *| <tTRUE>
  *| <tFALSE>
  */
 void factor() :
-{}
+{Token tk;}
 {
   (    "-" factor()
-| < tNOT >{Constants.numNot++;} factor()
-| < tENTACAR >{Constants.numEntacar++;} < tPARIZQ >{Constants.numPariz++;}
+|< tNOT >{Constants.numNot++;} factor()
+|< tENTACAR >{Constants.numEntacar++;} < tPARIZQ >{Constants.numPariz++;}
 expresion() < tPARDER >{Constants.numParder++;}
-| < tCARAENT >{Constants.numCaraent++;} < tPARIZQ >{Constants.numPariz++;}
+|< tCARAENT >{Constants.numCaraent++;} < tPARIZQ >{Constants.numPariz++;}
  expresion() < tPARDER >{Constants.numParder++;}
-| < tIDENTIFICADOR >{Constants.numIdentificador++;}
-| < tNUMERO >{Constants.numNumero++;}
-| < tCARAC >{Constants.numCarac++;}
-| < tCADENA >{Constants.numCadena++;}
-| < tTRUE >{Constants.numTrue++;}
-| < tFALSE >{Constants.numFalse++;}
-| < tPARIZQ >{Constants.numPariz++;} expresion() < tPARDER >{Constants.numParder++;})
+|< tIDENTIFICADOR >{Constants.numIdentificador++;}
+|< tNUMERO >{Constants.numNumero++;}
+|< tCARAC >{Constants.numCarac++;}
+|< tTRUE >{Constants.numTrue++; }
+|< tFALSE >{Constants.numFalse++;}
+|< tPARIZQ >{Constants.numPariz++;} expresion() < tPARDER >{Constants.numParder++;})
 {Constants.numFactor++;}
 }
+
+/* cadena ::= < tCADENA > */
+void cadena() :
+{}
+{	< tCADENA >{Constants.numCadena++;}}
 
