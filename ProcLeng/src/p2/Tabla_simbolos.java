@@ -1,6 +1,7 @@
 package p2;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -10,9 +11,10 @@ import p2.Simbolo.Tipo_variable;
 
 public class Tabla_simbolos {
 	
-	private final int MAX = 32771; // > 2^15
+	private final int MAX = 401; // > 2^15
 	private int numNodos;
 	private List<Simbolo>[] tabla;
+	private int[] T; 
 	
 	public Tabla_simbolos(){
 		inicializar_tabla();
@@ -24,6 +26,19 @@ public class Tabla_simbolos {
 	public void inicializar_tabla(){
 		this.numNodos = 0;	//elementos = 0
 		this.tabla = (List<Simbolo>[])new List[MAX]; //Tabla vacia
+		ArrayList<Integer> randomizar = new ArrayList<Integer>();
+		this.T = new int[MAX];
+		
+		/* Inicializar para Pearson */
+		for(int i = 0;  i < MAX; i++){
+			randomizar.add(i);
+		}
+		
+		Collections.shuffle(randomizar);
+		
+		for(int i = 0;  i < MAX; i++){
+			T[i] = randomizar.get(i);
+		}		
 	}
 	
 	/**
@@ -33,8 +48,7 @@ public class Tabla_simbolos {
 	 */
 	public Simbolo buscar_simbolo(String nombre){
 		List<Simbolo> listAux;
-		int entrada;
-		entrada = 0;		//PEARSON
+		int entrada = Pearson(nombre);
 		listAux = tabla[entrada];
 		
 		/* Si el contenido de la lista esta vacio -> no esta el simbolo */
@@ -47,7 +61,7 @@ public class Tabla_simbolos {
 			boolean encontrado = false;
 			Simbolo s = null;
 			
-			/* Mientras que haya un elemento, y hayamos encontrado nuestro simbolo...*/
+			/* Mientras que haya un elemento, y hayamos encontrado nuestro simbolo */
 			while(i.hasNext() && !encontrado){
 				s = i.next();
 				if(i.next().getNombre().equals(nombre)){
@@ -61,12 +75,11 @@ public class Tabla_simbolos {
 	}
 	
 	/**
-	 * Introduce en la tabla un simbolo PROGRAMA, con el nombre del parametro, de nivel 0,
-	 * con la direccion del parametro. No se verifica que ya exista.
+	 * Introduce en la tabla un simbolo PROGRAMA, con el nombre del parametro, 
+	 * de nivel 0, con la direccion del parametro. No se verifica que ya exista.
 	 */
 	public Simbolo introducir_programa(String nombre, int dir){
-		int entrada;
-		entrada = 0;			//PEARSON
+		int entrada = Pearson(nombre);
 		
 		/* Creamos el simbolo (podria ser con metodo aux de Simbolo) */
 		Simbolo s = new Simbolo();
@@ -83,12 +96,13 @@ public class Tabla_simbolos {
 	}
 	
 	/**
-	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre, devuelve null.
-	 * De lo contrario, introduce un simbolo variable con los datos de los argumentos.
+	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre,
+	 * devuelve null. De lo contrario, introduce un simbolo variable con los 
+	 * datos de los argumentos.
 	 */
-	public Simbolo introducir_variable(String nombre, Tipo_variable variable, int nivel, int dir){
-		int entrada;
-		entrada = 0;			//PEARSON
+	public Simbolo introducir_variable(String nombre, Tipo_variable variable,
+			int nivel, int dir){
+		int entrada = Pearson(nombre);
 		Simbolo s = null;
 		
 		if(!esta(nombre, nivel)){	
@@ -118,12 +132,13 @@ public class Tabla_simbolos {
 	}
 	
 	/**
-	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre, devuelve null.
-	 * De lo contrario, introduce un simbolo accion con los datos de los argumentos.
+	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre,
+	 * devuelve null. De lo contrario, introduce un simbolo accion con los datos
+	 * de los argumentos.
 	 */
-	public Simbolo introducir_accion(String nombre, int nivel, int dir, ArrayList<Simbolo> listaParam){
-		int entrada;
-		entrada = 0;			//PEARSON
+	public Simbolo introducir_accion(String nombre, int nivel, int dir,
+			ArrayList<Simbolo> listaParam){
+		int entrada = Pearson(nombre);
 		Simbolo s = null;
 		
 		if(!esta(nombre, nivel)){	
@@ -153,12 +168,13 @@ public class Tabla_simbolos {
 	}
 	
 	/**
-	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre, devuelve null.
-	 * De lo contrario, introduce un simbolo accion con los datos de los argumentos.
+	 * Si existe un simbolo en la tabla del mismo nivel, y con el mismo nombre,
+	 * devuelve null. De lo contrario, introduce un simbolo accion con los datos
+	 * de los argumentos.
 	 */
-	public Simbolo introducir_parametro(String nombre, Tipo_variable variable, Clase_parametro parametro, int nivel, int dir){
-		int entrada;
-		entrada = 0;			//PEARSON
+	public Simbolo introducir_parametro(String nombre, Tipo_variable variable,
+			Clase_parametro parametro, int nivel, int dir){
+		int entrada = Pearson(nombre);
 		Simbolo s = null;
 		
 		if(!esta(nombre, nivel)){	
@@ -270,7 +286,7 @@ public class Tabla_simbolos {
 	 * elimina los parametros asociados a esa accion
 	 */
 	public void eliminar_accion(String nombre, int nivel){
-		int i = 0; //Pearson
+		int i = Pearson(nombre);
 		
 		if(!(tabla[i] == null || tabla[i].size() == 0)){
 			List<Simbolo> l = tabla[i];
@@ -297,14 +313,15 @@ public class Tabla_simbolos {
 	 * Elimina de la tabla el parametro con el nombre y el nivel pasado como parametros.
 	 */
 	private void eliminar_parametro(String nombre, int nivel){
-		int i = 0; //Pearson
+		int i = Pearson(nombre);
 		
 		if(!(tabla[i] == null || tabla[i].size() == 0)){
 			List<Simbolo> l = tabla[i];
 			Iterator<Simbolo> it = l.iterator();
 			while(it.hasNext()){
 				Simbolo s = it.next();
-				if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNombre().equals(nombre) && s.getNivel()==nivel){
+				if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNombre().equals(nombre)
+						&& s.getNivel()==nivel){
 					
 					/* Parametro a eliminar */
 					l.remove(s);
@@ -318,8 +335,7 @@ public class Tabla_simbolos {
 	 * mismo nombre que los parametros dados
 	 */
 	private boolean esta(String nombre, int nivel){
-		int entrada;
-		entrada = 0;		//PEARSON
+		int entrada = Pearson(nombre);
 		boolean esta = false;
 		if(!(tabla[entrada] == null || tabla[entrada].size() == 0)){
 			
@@ -338,6 +354,17 @@ public class Tabla_simbolos {
 			}
 		}
 		return esta;
+	}
+	
+	/**
+	 * Devuelve a partir de una cadena la fila de la tabla hash que le corresponde
+	 */
+	private int Pearson(String nombre){
+		int h = 0;
+		for (int i = 0; i < nombre.length(); i++) {
+			h = T[h ^ nombre.charAt(i)];
+		}
+		return h;
 	}
 }
 
