@@ -7,14 +7,20 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Scanner;
 import p2.Constants;
+import java.util.ArrayList;
+import p2.Simbolo.*;
 
 public class minilengcompiler{
 	static Token ultTk;
+	static Tabla_simbolos T;
+	static int nivel;
   
   public static void main(String args []) throws ParseException  {
     boolean debug = false;
     boolean debugSintactico = false;
     minilengcompiler parser = null;
+    T = new Tabla_simbolos();
+    nivel = 0;
 
     Token ultTok;
 
@@ -185,12 +191,13 @@ int compile() :
 * bloque_sentencias
 */
 void programa() :
-{}
+{Token tk;}
 {
-  < tPROGRAMA >{Constants.numPrograma++;} < tIDENTIFICADOR >
+  < tPROGRAMA >{Constants.numPrograma++;} tk = < tIDENTIFICADOR >
   {Constants.numIdentificador++;}< tPUNTCOM >
   declaracion_variables() declaracion_acciones()
-  bloque_sentencias()}
+  bloque_sentencias()
+  {T.introducir_programa(tk.image,0);}}
 
 /* declaracion_variables ::= ( declaracion ";" )* */
 void declaracion_variables() :
@@ -201,28 +208,29 @@ void declaracion_variables() :
 
 /* declaración ::= tipo_variables identificadores */
 void declaracion() :
-{int numID = 0;}
+{ArrayList< Token > ids; Tipo_variable tipVar; }
 {
-  tipo_variables()  numID = identificadores()
-  {Constants.numVariables = Constants.numVariables + numID;}
+  tipVar = tipo_variables()  ids = identificadores()
+  {Constants.numVariables = Constants.numVariables + ids.size();}
 }
 
 /*tipo_variables ::= <tENTERO> | <tCARACTER> | <tBOOLEANO> */
-void tipo_variables() :
+Tipo_variable tipo_variables() :
 {}
 {
-  < tENTERO >{Constants.numEntero++;}
-| < tCARACTER >{Constants.numCaracter++;}
-| < tBOOLEANO >{Constants.numBooleano++;}
+  < tENTERO >{Constants.numEntero++; return Tipo_variable.ENTERO;}
+| < tCARACTER >{Constants.numCaracter++; return Tipo_variable.CHAR;}
+| < tBOOLEANO >{Constants.numBooleano++; return Tipo_variable.BOOLEANO;}
+{}
 }
 
 /*identificadores ::= <tIDENTIFICADOR> ( "," <tIDENTIFICADOR> )* */
-int identificadores() :
-{int numID = 0;}
+ArrayList< Token > identificadores() :
+{ArrayList< Token > ids = new ArrayList< Token >(); Token tk;}
 {
-  < tIDENTIFICADOR >{numID++; Constants.numIdentificador++;}
-  ( "," <tIDENTIFICADOR >{numID++; Constants.numIdentificador++;} )*
-  {return numID;}
+  tk = < tIDENTIFICADOR >{ids.add(tk); Constants.numIdentificador++;}
+  ( "," tk = <tIDENTIFICADOR >{ids.add(tk); Constants.numIdentificador++;} )*
+  {return ids;}
 }
 
 /*declaracion_acciones ::= ( declaracion_accion )* */
@@ -259,18 +267,18 @@ void parametros_formales() :
 }
 
 /*lista_parametros ::= identificadores */
-int lista_parametros() :
-{int id = 0;}
-{  id = identificadores()
-  {return id;}
+ArrayList< Token > lista_parametros() :
+{ArrayList< Token > ids;}
+{  ids = identificadores()
+  {return ids;}
 }
 
 /* parámetros ::= clase_parametros tipo_variables lista_parametros */
 void parametros() :
-{int id = 0;}
+{ArrayList< Token > ids;}
 {
-  clase_parametros() tipo_variables() id = lista_parametros()
-  {Constants.numParametros = Constants.numParametros + id;}
+  clase_parametros() tipo_variables() ids = lista_parametros()
+  {Constants.numParametros = Constants.numParametros + ids.size();}
 }
 
 /* clase_parametros ::= <tVAL> | <tREF> */
