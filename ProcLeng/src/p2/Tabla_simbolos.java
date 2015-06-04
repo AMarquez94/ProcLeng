@@ -11,7 +11,7 @@ import p2.Simbolo.Tipo_variable;
 
 public class Tabla_simbolos {
 	
-	private final int MAX = 401; // > 2^15
+	private final int MAX = 255; // > 2^15
 	private int numNodos;
 	private List<Simbolo>[] tabla;
 	private int[] T; 
@@ -64,8 +64,7 @@ public class Tabla_simbolos {
 			/* Mientras que haya un elemento, y hayamos encontrado nuestro simbolo */
 			while(i.hasNext() && !encontrado){
 				s = i.next();
-				if(i.next().getNombre().equals(nombre)){
-					
+				if(s.getNombre().equals(nombre)){
 					/* El simbolo esta */
 					encontrado = true;
 				}
@@ -105,7 +104,7 @@ public class Tabla_simbolos {
 		int entrada = Pearson(nombre);
 		Simbolo s = null;
 		
-		if(!esta(nombre, nivel)){	
+		if(!esta(nombre, nivel)){
 			
 			/* Si no existe un simbolo con el mismo nombre y nivel */
 			s = new Simbolo();
