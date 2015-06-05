@@ -11,7 +11,7 @@ import p2.Simbolo.Tipo_variable;
 
 public class Tabla_simbolos {
 	
-	private final int MAX = 255; // > 2^15
+	private final int MAX = 401; // > 2^15
 	private int numNodos;
 	private List<Simbolo>[] tabla;
 	private int[] T; 
@@ -27,16 +27,16 @@ public class Tabla_simbolos {
 		this.numNodos = 0;	//elementos = 0
 		this.tabla = (List<Simbolo>[])new List[MAX]; //Tabla vacia
 		ArrayList<Integer> randomizar = new ArrayList<Integer>();
-		this.T = new int[MAX];
+		this.T = new int[256];
 		
 		/* Inicializar para Pearson */
-		for(int i = 0;  i < MAX; i++){
+		for(int i = 0;  i < 256; i++){
 			randomizar.add(i);
 		}
 		
 		Collections.shuffle(randomizar);
 		
-		for(int i = 0;  i < MAX; i++){
+		for(int i = 0;  i < 256; i++){
 			T[i] = randomizar.get(i);
 		}		
 	}
