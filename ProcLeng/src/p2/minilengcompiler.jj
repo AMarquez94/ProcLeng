@@ -77,7 +77,6 @@ public class minilengcompiler{
 		System.exit(1);
     }	while (true)	{	    try	    {   			if (minilengcompiler.compile() == 1)        	{     		 System.out.println("Fin.");   		     break;	        }  		}  		catch (Exception e)  		{
   		  	Scanner error = new Scanner(e.getMessage());
-  		  	e.printStackTrace();
   		  	error.useDelimiter(",|\\.| |\"");
   		  	error.next();error.next();error.next();  		  	String tipoEncontrado = error.next();
   		  	if(tipoEncontrado.equals(""))  		  	{
@@ -89,22 +88,27 @@ public class minilengcompiler{
   		  	while(!error.hasNextInt())
   		  	{
 				error.next();
-  		  	}  		  	int columna = error.nextInt();  		  	error.nextLine();error.nextLine();  		  	String mensaje = "";  		  	while(error.hasNextLine())  		  	{				mensaje = mensaje + "%n" + error.nextLine();  		  	}  		  	error.close();  		  	System.out.printf("ERROR SINTÁCTICO (<%d,%d>): se ha reconocido un %s cuando se esperaba:",linea,columna,tipoEncontrado);
-  		  	System.out.printf(mensaje);    		System.exit(0);      }      catch (Error e)      {
+  		  	}  		  	int columna = error.nextInt();  		  	error.nextLine();error.nextLine();  		  	String mensaje = "";  		  	while(error.hasNextLine())  		  	{				mensaje = mensaje + "%n" + error.nextLine();  		  	}  		  	error.close();  		  	System.err.printf("ERROR SINTÁCTICO (<%d,%d>): se ha reconocido un %s cuando se esperaba:",linea,columna,tipoEncontrado);
+  		  	System.err.printf(mensaje);    		System.exit(0);      }      catch (Error e)      {
         Scanner error = new Scanner(e.getMessage());
         error.useDelimiter(",|\\.| |\"");
         error.next();error.next();error.next();error.next();        int linea = error.nextInt();        error.next();error.next();        int columna = error.nextInt();
         error.next();error.next();error.next();error.next();
         String simbolo = error.next();
         error.close();
-        System.out.printf("ERROR LÉXICO (<%d,%d>): símbolo no reconocido: <%s>%n",linea,columna,simbolo);
+        System.err.printf("ERROR LÉXICO (<%d,%d>): símbolo no reconocido: <%s>%n",linea,columna,simbolo);
         System.exit(0);      }    }
     if(debug)    {
       Constants.printLexical();
           }
     else if(debugSintactico)    {
       Constants.printSyntactic();
-    }  }}PARSER_END(minilengcompiler)
+    }  }
+  private static void error_semantico(Token tk, String mensaje){
+  	System.err.printf("ERROR SEMÁNTICO (<%d,%d>): " + mensaje + ": <%s>%n",tk.beginLine,tk.beginColumn,tk.image);
+  }}
+
+PARSER_END(minilengcompiler)
 
 TOKEN : /* Palabras reservadas */
 {
@@ -214,8 +218,13 @@ void declaracion() :
   tipVar = tipo_variables()  ids = identificadores()
   {Constants.numVariables = Constants.numVariables + ids.size();
    for(int i = 0;  i < ids.size(); i++){
-   		T.introducir_variable(ids.get(i).image, tipVar, nivel, 0);
-   }
+     	Simbolo s = T.buscar_simbolo(ids.get(i).image);
+     	if((s == null) || (s.getNivel() != nivel)){
+   			T.introducir_variable(ids.get(i).image, tipVar, nivel, 0);
+  		}
+  		else  		{
+  		  error_semantico(ids.get(i), "Identificador duplicado");  		}
+	 }
   }
 }
 
@@ -252,8 +261,10 @@ void declaracion_accion() :
 {}
 {  cabecera_accion() < tPUNTCOM >
   declaracion_variables() declaracion_acciones() bloque_sentencias()
-  {Constants.numAcciones++; T.mostrar_tabla(); nivel--;}    
-}
+  {Constants.numAcciones++;
+   T.eliminar_variables(nivel);
+   T.eliminar_acciones(nivel);
+   nivel--;}}
 
 /* cabecera_accion ::= <tACCION> <tIDENTIFICADOR> parametros_formales */
 void cabecera_accion() :
@@ -262,7 +273,15 @@ void cabecera_accion() :
   < tACCION >{Constants.numAccion++;} tk = < tIDENTIFICADOR >
   {Constants.numIdentificador++; nivel++;} listaParam = parametros_formales()
   {
-    T.introducir_accion(tk.image, nivel, 0, listaParam);  }
+    Simbolo s = T.buscar_simbolo(tk.image);
+    if((s == null) || (s.getNivel() != nivel-1)){
+   		T.introducir_accion(tk.image, nivel-1, 0, listaParam);
+  	}
+  	else
+  	{
+  	  error_semantico(tk, "Identificador duplicado");
+  	}
+  }
 }
 
 /* parametros_formales ::= ( "(" ( parametros ( ";" parametros )* )* ")" )? */
@@ -288,10 +307,18 @@ ArrayList <Simbolo > parametros() :
   p = clase_parametros() v = tipo_variables() ids = lista_parametros()
   {Constants.numParametros = Constants.numParametros + ids.size();
 	params = new ArrayList<Simbolo >(); 
-	for(int i = 0; i < ids.size(); i++){		Simbolo s = new Simbolo();
-		s.introducir_parametro(ids.get(i).image, v, p, nivel);
-		params.add(s);
+	for(int i = 0; i < ids.size(); i++){
+	  Simbolo s = T.buscar_simbolo(ids.get(i).image);
+   	  if((s == null) || (s.getNivel() != nivel)){
+   		Simbolo s1 = new Simbolo();
+		s1.introducir_parametro(ids.get(i).image, v, p, nivel);
+		params.add(s1);
 		T.introducir_parametro(ids.get(i).image, v, p, nivel, 0);
+  	  }
+  	  else
+  	  {
+  	    error_semantico(ids.get(i), "Identificador duplicado");
+  	  }		
 	}
 	return params;
   }
@@ -308,7 +335,7 @@ void bloque_sentencias() :
 {}
 {
   < tPRINCIPIO >{Constants.numPrincipio++;} lista_sentencias()
-   < tFIN >{Constants.numFin++;}
+   < tFIN >{Constants.numFin++; T.mostrar_tabla();}
 }
 
 /*lista_sentencias ::= ( sentencia )+ */
@@ -326,27 +353,36 @@ void lista_sentencias() :
 *| mientras_que
 */
 void sentencia() :
-{}
+{Token tk;}
 {
   leer() < tPUNTCOM >
 | escribir() < tPUNTCOM >
-| < tIDENTIFICADOR >{Constants.numIdentificador++;} asig_o_inv()
+| tk = < tIDENTIFICADOR >{Constants.numIdentificador++;
+							Simbolo s = T.buscar_simbolo(tk.image);
+							if(s !=null && s.es_valor())							{
+							  error_semantico(tk, "Argumento por valor y no por referencia");							}
+} asig_o_inv()
 | seleccion()
 | mientras_que()
 }
 
 /*leer ::= <tLEER> "(" lista_asignables ")" */
 void leer() :
-{}
+{ArrayList<Token > ids;}
 {
   < tLEER >{Constants.numLeer++;} < tPARIZQ >{Constants.numPariz++;}
-   lista_asignables() < tPARDER >{Constants.numParder++;}
+   ids = lista_asignables() < tPARDER >{Constants.numParder++;}
+   {for(int i = 0; i < ids.size(); i++){   		Simbolo s = T.buscar_simbolo(ids.get(i).image);
+   		if(s.es_valor())   		{			error_semantico(ids.get(i), "Argumento por valor y no por referencia");
+   		}   }
+ }
 }
 /*lista_asignables ::= identificadores */
-void lista_asignables() :
-{}
+ArrayList<Token > lista_asignables() :
+{ArrayList<Token > ids;}
 {
-  identificadores()
+  ids = identificadores()
+  {return ids;}
 }
 
 /*escribir ::= <tESCRIBIR> "(" lista_escribibles ")" */
@@ -509,22 +545,22 @@ void operador_multiplicativo() :
  *| <tTRUE>
  *| <tFALSE>
  */
-void factor() :
-{Token tk;}
+Token factor() :
+{Token tk = null;}
 {
   (    "-" factor()
-|< tNOT >{Constants.numNot++;} factor()
+|< tNOT >{Constants.numNot++;} tk = factor()
 |< tENTACAR >{Constants.numEntacar++;} < tPARIZQ >{Constants.numPariz++;}
 expresion() < tPARDER >{Constants.numParder++;}
 |< tCARAENT >{Constants.numCaraent++;} < tPARIZQ >{Constants.numPariz++;}
  expresion() < tPARDER >{Constants.numParder++;}
-|< tIDENTIFICADOR >{Constants.numIdentificador++;}
+|tk = < tIDENTIFICADOR >{Constants.numIdentificador++;}
 |< tNUMERO >{Constants.numNumero++;}
 |< tCARAC >{Constants.numCarac++;}
 |< tTRUE >{Constants.numTrue++; }
 |< tFALSE >{Constants.numFalse++;}
 |< tPARIZQ >{Constants.numPariz++;} expresion() < tPARDER >{Constants.numParder++;})
-{Constants.numFactor++;}
+{Constants.numFactor++; return tk;}
 }
 
 /* cadena ::= < tCADENA > */

@@ -241,9 +241,8 @@ public class Tabla_simbolos {
 				while(it.hasNext()){
 					Simbolo s = it.next();
 					if(s.getTipo().equals(Tipo_simbolo.VARIABLE) && s.getNivel()== nivel){
-						
 						/* Variable encontrada en el nivel pedido -> Eliminamos*/
-						l.remove(s);
+						it.remove();
 					}
 				}
 			}
@@ -273,7 +272,7 @@ public class Tabla_simbolos {
 						}
 						
 						/* Eliminar accion */
-						l.remove(s);
+						it.remove();
 					}
 				}
 			}
@@ -344,7 +343,7 @@ public class Tabla_simbolos {
 			
 			while(i.hasNext() && !parar){
 				Simbolo s = i.next();
-				if(s.getNombre().equals(nombre) && s.getNivel() <= nivel){
+				if(s.getNombre().equals(nombre) && s.getNivel() == nivel){
 					
 					/* Mismo nombre, mismo nivel = simbolo ya esta*/
 					esta = true;
@@ -367,6 +366,11 @@ public class Tabla_simbolos {
 	}
 	
 	public void mostrar_tabla(){
+		System.out.println("===========================");
+		System.out.println("Mostrando tabla de simbolos");
+		System.out.println("===========================");
+		System.out.println("Nivel Nombre");
+		System.out.println("==============");
 		for (int i = 0; i < MAX; i++) {
 			if(!(tabla[i] == null || tabla[i].size() == 0)){
 				
@@ -375,7 +379,7 @@ public class Tabla_simbolos {
 				Iterator<Simbolo> it = l.iterator();
 				while(it.hasNext()){
 					Simbolo s = it.next();
-					System.out.println(s.getNivel() + " - " + s.getNombre());
+					System.out.println("  " + s.getNivel() + " - " + s.getNombre());
 				}
 			}
 		}

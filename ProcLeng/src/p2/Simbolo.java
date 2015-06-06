@@ -99,24 +99,28 @@ public class Simbolo {
 	
 	/* Identificadores */
 	public boolean es_variable(){
-		return (tipo.toString().equals("VARIABLE"));
+		return (tipo.name().equals("VARIABLE"));
 	}
 	
 	public boolean es_parametro(){
-		return (tipo.toString().equals("PARAMETRO"));
+		return (tipo.name().equals("PARAMETRO"));
 	}
 	
 	public boolean es_accion(){
-		return (tipo.toString().equals("ACCION"));
+		return (tipo.name().equals("ACCION"));
 	}
 	
 	public boolean es_valor(){
-		return (tipo.toString().equals("PARAMETRO")
-				&& parametro.equals("VAL"));
+		return (tipo.name().equals("PARAMETRO")
+				&& parametro.name().equals("VAL"));
 	}
 	
 	public boolean es_referencia(){
-		return (tipo.toString().equals("PARAMETRO")
+		return (tipo.name().equals("PARAMETRO")
 				&& parametro.equals("REF"));
+	}
+	
+	public String toString(){
+		return this.nombre + " " + this.nivel + " " +  this.tipo + " " + this.parametro + " " + this.variable;
 	}
 }
