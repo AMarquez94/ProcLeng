@@ -365,6 +365,21 @@ public class Tabla_simbolos {
 		}
 		return h;
 	}
+	
+	public void mostrar_tabla(){
+		for (int i = 0; i < MAX; i++) {
+			if(!(tabla[i] == null || tabla[i].size() == 0)){
+				
+				/* Lista con simbolos */
+				List<Simbolo> l = tabla[i];
+				Iterator<Simbolo> it = l.iterator();
+				while(it.hasNext()){
+					Simbolo s = it.next();
+					System.out.println(s.getNivel() + " - " + s.getNombre());
+				}
+			}
+		}
+	}
 }
 
 ///**

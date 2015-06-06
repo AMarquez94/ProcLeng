@@ -252,23 +252,26 @@ void declaracion_accion() :
 {}
 {  cabecera_accion() < tPUNTCOM >
   declaracion_variables() declaracion_acciones() bloque_sentencias()
-  {Constants.numAcciones++;}    
+  {Constants.numAcciones++; T.mostrar_tabla(); nivel--;}    
 }
 
 /* cabecera_accion ::= <tACCION> <tIDENTIFICADOR> parametros_formales */
 void cabecera_accion() :
-{}
+{ArrayList<Simbolo> listaParam; Token tk;}
 {
-  < tACCION >{Constants.numAccion++;} < tIDENTIFICADOR >
-  {Constants.numIdentificador++;} parametros_formales()
+  < tACCION >{Constants.numAccion++;} tk = < tIDENTIFICADOR >
+  {Constants.numIdentificador++; nivel++;} listaParam = parametros_formales()
+  {
+    T.introducir_accion(tk.image, nivel, 0, listaParam);  }
 }
 
 /* parametros_formales ::= ( "(" ( parametros ( ";" parametros )* )* ")" )? */
-void parametros_formales() :
-{}
+ArrayList< Simbolo > parametros_formales() :
+{ArrayList <Simbolo > params = new ArrayList<Simbolo >(); ArrayList<Simbolo > aux;}
 {
-  ( < tPARIZQ >{Constants.numPariz++;}( parametros()
-  ( ";" parametros() )* )*< tPARDER >{Constants.numParder++;} )?
+  ( < tPARIZQ >{Constants.numPariz++;}( aux = parametros()  {params.addAll(aux);}
+  ( ";" aux = parametros(){params.addAll(aux);} )* )*< tPARDER >{Constants.numParder++;} )?
+  {return params;}
 }
 
 /*lista_parametros ::= identificadores */
@@ -279,18 +282,27 @@ ArrayList< Token > lista_parametros() :
 }
 
 /* parámetros ::= clase_parametros tipo_variables lista_parametros */
-void parametros() :
-{ArrayList< Token > ids;}
+ArrayList <Simbolo > parametros() :
+{ArrayList< Token > ids; ArrayList<Simbolo > params; Clase_parametro p; Tipo_variable v;}
 {
-  clase_parametros() tipo_variables() ids = lista_parametros()
-  {Constants.numParametros = Constants.numParametros + ids.size();}
+  p = clase_parametros() v = tipo_variables() ids = lista_parametros()
+  {Constants.numParametros = Constants.numParametros + ids.size();
+	params = new ArrayList<Simbolo >(); 
+	for(int i = 0; i < ids.size(); i++){		Simbolo s = new Simbolo();
+		s.introducir_parametro(ids.get(i).image, v, p, nivel);
+		params.add(s);
+		T.introducir_parametro(ids.get(i).image, v, p, nivel, 0);
+	}
+	return params;
+  }
 }
 
 /* clase_parametros ::= <tVAL> | <tREF> */
-void clase_parametros() :
+Clase_parametro clase_parametros() :
 {}
-{  < tVAL >{Constants.numVal++;}
-| < tREF >{Constants.numRef++;}}
+{  < tVAL >{Constants.numVal++; return Clase_parametro.VAL;}
+| < tREF >{Constants.numRef++; return Clase_parametro.REF;}
+}
 /* bloque_sentencias ::= <tPRINCIPIO> lista_sentencias <tFIN> */
 void bloque_sentencias() :
 {}
