@@ -322,7 +322,8 @@ public class Tabla_simbolos {
 						&& s.getNivel()==nivel){
 					
 					/* Parametro a eliminar */
-					l.remove(s);
+//					l.remove(s);
+					it.remove();
 				}
 			}
 		}
@@ -353,6 +354,23 @@ public class Tabla_simbolos {
 		}
 		return esta;
 	}
+	
+	public void eliminar_parametros(int nivel){
+	for (int i = 0; i < MAX; i++){
+		if(!(tabla[i] == null || tabla[i].size() == 0)){
+			
+			/* Lista con simbolos */
+			List<Simbolo> l = tabla[i];
+			Iterator<Simbolo> it = l.iterator();
+			while(it.hasNext()){
+				Simbolo s = it.next();
+				if(s.getTipo().equals(Tipo_simbolo.PARAMETRO) && s.getNivel()== nivel) {
+					it.remove();
+				}
+			}
+		}
+	}
+}
 	
 	/**
 	 * Devuelve a partir de una cadena la fila de la tabla hash que le corresponde

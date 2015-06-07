@@ -9,6 +9,7 @@ import java.util.Scanner;
 import p2.Constants;
 import java.util.ArrayList;
 import p2.Simbolo.*;
+import p2.RegistroExpr.*;
 
 public class minilengcompiler{
 	static Token ultTk;
@@ -76,6 +77,7 @@ public class minilengcompiler{
     else    {		System.out.println("Error: Argumentos inválidos");
 		System.exit(1);
     }	while (true)	{	    try	    {   			if (minilengcompiler.compile() == 1)        	{     		 System.out.println("Fin.");   		     break;	        }  		}  		catch (Exception e)  		{
+  		  	e.printStackTrace();
   		  	Scanner error = new Scanner(e.getMessage());
   		  	error.useDelimiter(",|\\.| |\"");
   		  	error.next();error.next();error.next();  		  	String tipoEncontrado = error.next();
@@ -198,11 +200,16 @@ int compile() :
 void programa() :
 {Token tk;}
 {
-  < tPROGRAMA >{Constants.numPrograma++;} tk = < tIDENTIFICADOR >
+  < tPROGRAMA >{Constants.numPrograma++;} tk = < tIDENTIFICADOR >  {T.introducir_programa(tk.image,0);}
   {Constants.numIdentificador++;}< tPUNTCOM >
   declaracion_variables() declaracion_acciones()
   bloque_sentencias()
-  {T.introducir_programa(tk.image,0);}}
+  {T.eliminar_variables(0);
+   T.eliminar_acciones(0);
+   T.eliminar_parametros(0);
+   T.eliminar_programa();
+   T.mostrar_tabla();}
+}
 
 /* declaracion_variables ::= ( declaracion ";" )* */
 void declaracion_variables() :
@@ -264,6 +271,7 @@ void declaracion_accion() :
   {Constants.numAcciones++;
    T.eliminar_variables(nivel);
    T.eliminar_acciones(nivel);
+   T.eliminar_parametros(nivel);
    nivel--;}}
 
 /* cabecera_accion ::= <tACCION> <tIDENTIFICADOR> parametros_formales */
@@ -460,11 +468,54 @@ void lista_expresiones() :
 }
 
 /*expresión ::= expresion_simple ( operador_relacional expresion_simple)? */
-void expresion() :
-{}
+RegistroExpr expresion() :
+{RegistroExpr reg; RegistroExpr reg1 = null; Token tk = null;}
 {
-  expresion_simple() ( operador_relacional() expresion_simple() )?
-  {Constants.numExpresiones++;} 
+  reg = expresion_simple(){Constants.numExpresiones++;} ( tk = operador_relacional() reg1 = expresion_simple(){Constants.numExpresiones++;} )?
+  {	if(reg1 == null){
+    	System.out.println("---> "/* + tk.image */+ " " + reg.getTipo());
+    	return reg;    }
+    else{
+      	if(reg.es_booleano() && reg1.es_booleano()){			if(tk.image.equals("=") || tk.image.equals("<>")){
+
+    			System.out.println("A---> "/* + tk.image */+ " " + reg.getTipo());
+				return reg;
+			}
+			else{
+			  	error_semantico(tk,"Operador no permitido para expresiones booleanas");				RegistroExpr result = new RegistroExpr();
+				result.setTipo(Tipo_variable.DESCONOCIDO);
+
+				System.out.println("A---> "/* + tk.image */+ " " + result.getTipo());
+				return result;
+			}
+      	}
+      	else if((reg.es_booleano() && reg1.es_desconocido())||
+      		 (reg.es_desconocido() && reg1.es_booleano())){
+      		if(tk.image.equals("=") || tk.image.equals("<>")){
+      		    System.out.println("A---> "/* + tk.image */+ " " + reg.getTipo());
+				return reg;
+			}
+			else{
+			  	error_semantico(tk,"Operador no permitido para expresiones booleanas");
+				RegistroExpr result = new RegistroExpr();
+				result.setTipo(Tipo_variable.DESCONOCIDO);
+				System.out.println("A---> "/* + tk.image */+ " " + result.getTipo());
+				return result;
+			}		        	}
+      	else if((reg.es_entero()||reg.es_caracter()||reg.es_desconocido()) &&
+      			(reg1.es_entero()||reg1.es_caracter()||reg1.es_desconocido())){					RegistroExpr result = new RegistroExpr();
+					result.setTipo(Tipo_variable.BOOLEANO);
+					System.out.println("A---> "/* + tk.image */+ " " + result.getTipo());
+					return result;
+      			}
+      	else{
+      	 	error_semantico(tk,"Operador no permitido para una expresion booleana y otra de distinto tipo");			RegistroExpr result = new RegistroExpr();
+			result.setTipo(Tipo_variable.DESCONOCIDO);
+			System.out.println("A---> "/* + tk.image */+ " " + result.getTipo());
+			return result;
+      	}
+    }
+  }
 }
 
 /*
@@ -475,45 +526,83 @@ void expresion() :
 *| < tMEI >
 *| < tNI >
 */
-void operador_relacional() :
-{}
+Token operador_relacional() :
+{Token tk;}
 {
-  (< tMAYOR >{Constants.numMayor++;}
-| < tMENOR >{Constants.numMenor++;}
-| < tIGUAL >{Constants.numIgual++;}
-| < tMAI >{Constants.numMai++;}
-| < tMEI >{Constants.numMei++;}
-| < tNI >{Constants.numNi++;})
-	{Constants.numOpRel++;}
+  (tk = < tMAYOR >{Constants.numMayor++;}
+| tk = < tMENOR >{Constants.numMenor++;}
+| tk = < tIGUAL >{Constants.numIgual++;}
+| tk = < tMAI >{Constants.numMai++;}
+| tk = < tMEI >{Constants.numMei++;}
+| tk = < tNI >{Constants.numNi++;})
+	{Constants.numOpRel++; return tk;}
 }
 
 /*expresion_simple ::= termino ( operador_aditivo termino )* */
-void expresion_simple() :
-{}
+RegistroExpr expresion_simple() :
+{RegistroExpr reg; RegistroExpr reg1 = null; Token tk = null;}
 {
-  termino() ( operador_aditivo() termino() )*
-  {Constants.numExpresionesS++;}
+  reg = termino() ( tk= operador_aditivo() reg1 = termino(){Constants.numExpresionesS++;
+  		if(reg1 == null){
+  		  System.out.println("sdfasfdasf");
+  		  return reg;  		}
+  		else{			if(reg.es_desconocido() && reg1.es_desconocido()){
+			  ;			}
+			else if(((reg.es_entero()||reg.es_desconocido()) && (reg1.es_entero() || reg1.es_desconocido()))
+					&& !tk.image.equals("or")){				reg = new RegistroExpr();
+				reg.setTipo(Tipo_variable.ENTERO);
+			}
+			else if(((reg.es_booleano()||reg.es_desconocido()) && (reg1.es_booleano() || reg1.es_desconocido()))
+					&& tk.image.equals("or")){
+				reg = new RegistroExpr();
+				reg.setTipo(Tipo_variable.BOOLEANO);
+			}
+			else			{
+			  error_semantico(tk, "Operador aditivo no válido con los tipos de las expresiones");			  reg = new RegistroExpr();
+			  reg.setTipo(Tipo_variable.DESCONOCIDO);
+			}
+		}
+  } )*
+  {System.out.println("B---> "/* + tk.image */+ " " + reg.getTipo());return reg;}
+  
 }
 
 /* operador_aditivo ::= < tMAS >
  *| < tMENOS >
  *| < tOR >
  */
-void operador_aditivo() :
-{}
+Token operador_aditivo() :
+{Token tk;}
 {
-  (< tMAS >{Constants.numMas++;}
-| < tMENOS >{Constants.numMenos++;}
-| < tOR >{Constants.numOr++;})
-{Constants.numOpAdd++;}
+  (tk = < tMAS >{Constants.numMas++;}
+| tk = < tMENOS >{Constants.numMenos++;}
+| tk = < tOR >{Constants.numOr++;})
+{Constants.numOpAdd++; return tk;}
 }
 
 /*termino ::= factor ( operador_multiplicativo factor )* */
-void termino() :
-{}
+RegistroExpr termino() :
+{RegistroExpr reg = null; RegistroExpr reg1 = null; Token tk = null;}
 {
-  factor() ( operador_multiplicativo() factor() )*
-  {Constants.numTermino++;}
+  reg = factor() ( tk = operador_multiplicativo() reg1 =factor()  {
+    if(reg.getTipo()==null)    {		System.out.println("asfjñkl");
+    }
+    if(reg1.getTipo()==null){
+      System.out.println("asfjñkl");
+      return reg;    }
+	else{    	if(reg.es_desconocido() && reg1.es_desconocido()){			reg = new RegistroExpr();
+			reg.setTipo(Tipo_variable.DESCONOCIDO);
+		}
+		else if((reg.es_desconocido()||reg.es_entero())&&(reg1.es_desconocido()||reg1.es_entero())){			reg = new RegistroExpr();
+			reg.setTipo(Tipo_variable.ENTERO);
+		}
+		else		{
+		  error_semantico(tk,"Operador aditivo no válido con los tipos de las expresiones");
+		  reg = new RegistroExpr();
+		  reg.setTipo(Tipo_variable.DESCONOCIDO);		}
+	}
+  })*
+  {Constants.numTermino++; /*System.out.println("C---> " + tk.image + " " /*+ reg.getTipo())*/;return reg;}
 }
 
 /* operador_multiplicativo ::= < tPOR >
@@ -522,15 +611,15 @@ void termino() :
  *| < tMOD >
  *| < tDIV >
  */
-void operador_multiplicativo() :
-{}
+Token operador_multiplicativo() :
+{Token tk = null;}
 {
-  (< tPOR >{Constants.numPor++;}
-| < tDIVISION >{Constants.numDivision++;}
-| < tAND >{Constants.numAnd++;}
-| < tMOD >{Constants.numMod++;}
-| < tDIV >{Constants.numDiv++;})
-{Constants.numOpMul++;}
+  (tk = < tPOR >{Constants.numPor++;}
+|tk = < tDIVISION >{Constants.numDivision++;}
+|tk = < tAND >{Constants.numAnd++;}
+|tk = < tMOD >{Constants.numMod++;}
+|tk = < tDIV >{Constants.numDiv++;})
+{Constants.numOpMul++; return tk;}
 }
 
 /*
@@ -545,22 +634,94 @@ void operador_multiplicativo() :
  *| <tTRUE>
  *| <tFALSE>
  */
-Token factor() :
-{Token tk = null;}
+RegistroExpr factor() :
+{Token tk = null; RegistroExpr reg = null;}
 {
-  (    "-" factor()
-|< tNOT >{Constants.numNot++;} tk = factor()
-|< tENTACAR >{Constants.numEntacar++;} < tPARIZQ >{Constants.numPariz++;}
-expresion() < tPARDER >{Constants.numParder++;}
-|< tCARAENT >{Constants.numCaraent++;} < tPARIZQ >{Constants.numPariz++;}
- expresion() < tPARDER >{Constants.numParder++;}
+  (    tk = "-" reg = factor()    {	if(!(reg.es_entero() || reg.es_desconocido())){			error_semantico(tk,"El operador '-' solo se puede aplicar a un entero");
+			RegistroExpr result = new RegistroExpr();
+			result.setTipo(Tipo_variable.DESCONOCIDO);
+			System.out.println("D---> " + tk.image + " " + result.getTipo());
+			return result;	
+    	}
+    	else{
+    	  System.out.println("D---> " + tk.image + " " + reg.getTipo());    		return reg;
+    	}
+    }
+|tk = < tNOT >{Constants.numNot++;} reg = factor()
+	{	if(!(reg.es_booleano() || reg.es_desconocido())){			error_semantico(tk,"El operador 'not' solo se puede aplicar a un booleano");
+			RegistroExpr result = new RegistroExpr();
+			result.setTipo(Tipo_variable.DESCONOCIDO);
+			System.out.println("D---> " + tk.image + " " + result.getTipo());
+			return result;	
+		}
+		else{
+		  System.out.println("D---> " + tk.image + " " + reg.getTipo());
+    		return reg;
+    	}	}
+|tk = < tENTACAR >{Constants.numEntacar++;} < tPARIZQ >{Constants.numPariz++;}
+reg = expresion() < tPARDER >{Constants.numParder++;}
+	{	if(!(reg.es_entero() || reg.es_desconocido())){	  		error_semantico(tk,"La funcion entacar solo se puede aplicar a un entero");			RegistroExpr result = new RegistroExpr();
+			result.setTipo(Tipo_variable.DESCONOCIDO);
+			System.out.println("D---> " + tk.image + " " + result.getTipo());
+			return result;	
+		}
+		else		{			reg.setTipo(Tipo_variable.CHAR);
+			System.out.println("D---> " + tk.image + " " + reg.getTipo());
+			return reg;
+		}	}
+|tk = < tCARAENT >{Constants.numCaraent++;} < tPARIZQ >{Constants.numPariz++;}
+reg = expresion() < tPARDER >{Constants.numParder++;}
+	{	if(!(reg.es_caracter() || reg.es_desconocido())){
+	  		error_semantico(tk,"La funcion caraent solo se puede aplicar a un caracter");
+			RegistroExpr result = new RegistroExpr();
+			result.setTipo(Tipo_variable.DESCONOCIDO);
+			System.out.println("D---> " + tk.image + " " + result.getTipo());
+			return result;	
+		}
+		else
+		{
+			reg.setTipo(Tipo_variable.ENTERO);
+			System.out.println("D---> " + tk.image + " " + reg.getTipo());
+			return reg;
+		}
+	}
 |tk = < tIDENTIFICADOR >{Constants.numIdentificador++;}
-|< tNUMERO >{Constants.numNumero++;}
-|< tCARAC >{Constants.numCarac++;}
-|< tTRUE >{Constants.numTrue++; }
-|< tFALSE >{Constants.numFalse++;}
-|< tPARIZQ >{Constants.numPariz++;} expresion() < tPARDER >{Constants.numParder++;})
-{Constants.numFactor++; return tk;}
+	{	reg = new RegistroExpr();
+		Simbolo s = T.buscar_simbolo(tk.image);
+		if(s != null){
+		  reg.setTipo(s.getVariable());
+		  reg.setTk(tk);
+		  System.out.println("D---> " + tk.image + " " + reg.getTipo());
+		  return reg;		}
+		else{
+		  reg.setTipo(Tipo_variable.DESCONOCIDO);
+		  reg.setTk(tk);
+		  System.out.println("D1---> " + tk.image + " " + reg.getTipo());
+		  return reg;		}	}
+|tk = < tNUMERO >{Constants.numNumero++;}
+	{	reg = new RegistroExpr();
+		reg.introducir_entero(tk,Integer.parseInt(tk.image));
+		System.out.println("D---> " + tk.image + " " + reg.getTipo());
+		return reg;
+	}
+|tk = < tCARAC >{Constants.numCarac++;}
+	{	reg = new RegistroExpr();
+		reg.introducir_char(tk,tk.image);
+		System.out.println("D---> " + tk.image + " " + reg.getTipo());
+		return reg;	}
+|tk = < tTRUE >{Constants.numTrue++; }
+	{	reg = new RegistroExpr();
+		reg.introducir_booleano(tk, true);
+		System.out.println("D---> " + tk.image + " " + reg.getTipo());
+		return reg;	}
+|tk = < tFALSE >{Constants.numFalse++;}
+	{	reg = new RegistroExpr();
+		reg.introducir_booleano(tk, false);
+		System.out.println("D---> " + tk.image + " " + reg.getTipo());
+		return reg;
+	}
+|< tPARIZQ >{Constants.numPariz++;} reg = expresion() < tPARDER >{Constants.numParder++;return reg;})
+{Constants.numFactor++;}
 }
 
 /* cadena ::= < tCADENA > */
