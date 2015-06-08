@@ -117,7 +117,7 @@ public class Simbolo {
 	
 	public boolean es_referencia(){
 		return (tipo.name().equals("PARAMETRO")
-				&& parametro.equals("REF"));
+				&& parametro.name().equals("REF"));
 	}
 	
 	public String toString(){

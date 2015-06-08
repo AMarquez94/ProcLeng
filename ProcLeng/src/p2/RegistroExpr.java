@@ -1,18 +1,27 @@
 package p2;
 
+import p2.Simbolo.Clase_parametro;
 import p2.Simbolo.Tipo_variable;
 
 public class RegistroExpr {
 	
-	private int valorEnt;
+	private Integer valorEnt;
 	private boolean valorBool;
 	private String valorChar;
+
 	private String valorCadena;
 	
 	private Tipo_variable tipo;
+	private Clase_parametro clase;
 	private Token tk;
 	
 	/* Getters y Setters */
+	public Clase_parametro getClase() {
+		return clase;
+	}
+	public void setClase(Clase_parametro clase) {
+		this.clase = clase;
+	}
 	public int getValorEnt() {
 		return valorEnt;
 	}
@@ -76,14 +85,24 @@ public class RegistroExpr {
 	}
 	
 	public boolean es_caracter(){
-		return this.tipo.name().equals("CARACTER");
+		return this.tipo.name().equals("CHAR");
 	}
 	
 	public boolean es_desconocido(){
-		if(this.tipo == null){
-			System.out.println("klbañjkljsljfñas");
-		}
 		return this.tipo.name().equals("DESCONOCIDO");
+	}
+	
+	public boolean es_valor(){
+		if(this.clase==null){
+			return false;
+		}
+		else{
+			return this.clase.name().equals("VAL");
+		}
+	}
+	
+	public boolean has_valor(){
+		return this.valorEnt != null;
 	}
 	
 	

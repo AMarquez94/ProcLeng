@@ -69,7 +69,12 @@ public class Tabla_simbolos {
 					encontrado = true;
 				}
 			}
-			return s;
+			if(encontrado){
+				return s;
+			}
+			else{
+				return null;
+			}
 		}
 	}
 	
@@ -388,7 +393,7 @@ public class Tabla_simbolos {
 		System.out.println("Mostrando tabla de simbolos");
 		System.out.println("===========================");
 		System.out.println("Nivel Nombre");
-		System.out.println("==============");
+		System.out.println("============");
 		for (int i = 0; i < MAX; i++) {
 			if(!(tabla[i] == null || tabla[i].size() == 0)){
 				
