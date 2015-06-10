@@ -6,7 +6,7 @@ import p2.Simbolo.Tipo_variable;
 public class RegistroExpr {
 	
 	private Integer valorEnt;
-	private boolean valorBool;
+	private Boolean valorBool;
 	private String valorChar;
 
 	private String valorCadena;
@@ -103,6 +103,10 @@ public class RegistroExpr {
 	
 	public boolean has_valor(){
 		return this.valorEnt != null;
+	}
+//	
+	public boolean es_constante(){
+		return this.valorEnt != null || this.valorBool!= null || this.valorChar != null || this.valorCadena!=null;
 	}
 	
 	

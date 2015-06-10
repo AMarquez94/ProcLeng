@@ -27,16 +27,16 @@ public class Tabla_simbolos {
 		this.numNodos = 0;	//elementos = 0
 		this.tabla = (List<Simbolo>[])new List[MAX]; //Tabla vacia
 		ArrayList<Integer> randomizar = new ArrayList<Integer>();
-		this.T = new int[256];
+		this.T = new int[MAX];
 		
 		/* Inicializar para Pearson */
-		for(int i = 0;  i < 256; i++){
+		for(int i = 0;  i < MAX; i++){
 			randomizar.add(i);
 		}
 		
 		Collections.shuffle(randomizar);
 		
-		for(int i = 0;  i < 256; i++){
+		for(int i = 0;  i < MAX; i++){
 			T[i] = randomizar.get(i);
 		}		
 	}
@@ -113,7 +113,7 @@ public class Tabla_simbolos {
 			
 			/* Si no existe un simbolo con el mismo nombre y nivel */
 			s = new Simbolo();
-			s.introducir_variable(nombre, variable, nivel);
+			s.introducir_variable(nombre, variable, nivel, dir);
 			if(tabla[entrada] == null || tabla[entrada].size()==0){	
 				
 				/* Nodo vacio -> Insercion inmediata */
@@ -149,7 +149,7 @@ public class Tabla_simbolos {
 			
 			/* Si no existe un simbolo con el mismo nombre y nivel */
 			s = new Simbolo();
-			s.introducir_accion(nombre, nivel, listaParam);
+			s.introducir_accion(nombre, nivel, listaParam, dir);
 			if(tabla[entrada] == null || tabla[entrada].size()==0){	
 				
 				/* Nodo vacio -> Insercion inmediata */
@@ -185,7 +185,7 @@ public class Tabla_simbolos {
 			
 			/* Si no existe un simbolo con el mismo nombre y nivel */
 			s = new Simbolo();
-			s.introducir_parametro(nombre, variable, parametro, nivel);
+			s.introducir_parametro(nombre, variable, parametro, nivel, dir);
 			if(tabla[entrada] == null || tabla[entrada].size()==0){	
 				
 				/* Nodo vacio -> Insercion inmediata */
@@ -383,7 +383,7 @@ public class Tabla_simbolos {
 	private int Pearson(String nombre){
 		int h = 0;
 		for (int i = 0; i < nombre.length(); i++) {
-			h = T[h ^ nombre.charAt(i)];
+			h = T[(h ^ nombre.charAt(i))%(MAX+1)];
 		}
 		return h;
 	}
@@ -402,7 +402,14 @@ public class Tabla_simbolos {
 				Iterator<Simbolo> it = l.iterator();
 				while(it.hasNext()){
 					Simbolo s = it.next();
-					System.out.println("  " + s.getNivel() + " - " + s.getNombre());
+					if(s.es_accion()){
+						System.out.println("  " + s.getNivel() + " - " + s.getNombre());
+						ArrayList<Simbolo> lista = s.getLista_parametros();
+					}
+					else{
+						System.out.println("  " + s.getNivel() + " - " + s.getNombre());
+					}
+					
 				}
 			}
 		}
