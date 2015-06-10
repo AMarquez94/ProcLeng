@@ -20,6 +20,7 @@ public class minilengcompiler{
 	static GeneracionCodigo fichero;
 	static ArrayList<Integer > dir;
 	static int etiqueta;
+	static String nombre;
   
   public static void main(String args []) throws ParseException  {
     boolean debug = false;
@@ -30,8 +31,9 @@ public class minilengcompiler{
     nivel = 0;
     etiqueta = 0;
     ok = true;
-    String nombre = "entrada";
+    nombre = "entrada";
 	dir = new ArrayList<Integer>();
+	
     if(args.length == 0)    {    	parser = new minilengcompiler(System.in);
     	nombre = "entrada";
     	System.out.println("Leyendo de la entrada estandar...");
@@ -54,8 +56,8 @@ public class minilengcompiler{
 			System.out.println("Leyendo de fichero...");
 		}
 		catch(IOException e)		{
-		  	System.out.println("Error:fichero no encontrado");
-		  	System.exit(0);		}
+		  	System.out.println("Error: fichero no encontrado");
+		  	System.exit(1);		}
 	  }
     }
     else if(args.length == 2)    {
@@ -81,13 +83,14 @@ public class minilengcompiler{
 		  }
 		  catch(IOException e)
 		  {
-		  	System.out.println("Error: error de e/s con el fichero");
+		  	System.err.println("Error: error de e/s con el fichero");
 		  	System.exit(1);
 		  }      	}
-      	else      	{			System.out.println("Error: Argumentos invalidos");
+      	else      	{			System.err.println("Error: Argumentos invalidos");
+			System.err.println("   Instrucciones: (-lex_stats|-syntax_stats)? (nombreFichero)?");
 			System.exit(1);
       	}    }
-    else    {		System.out.println("Error: Argumentos invalidos");
+    else    {   System.err.println("Error: Argumentos invalidos");		System.err.println("   Instrucciones: (-lex_stats|-syntax_stats)? (nombreFichero)?");
 		System.exit(1);
     }
 
@@ -95,7 +98,7 @@ public class minilengcompiler{
 	}catch(IOException e)	{
 	  System.err.println("Error en operacion de E/S con el fichero " + nombre + ".code"); 	  System.exit(1);
 	}	while (true)	{	    try	    {   			if (minilengcompiler.compile() == 1)        	{     		 System.out.println("Fin.");   		     break;	        }  		}  		catch (Exception e)  		{
-  		    e.printStackTrace();
+//  		    e.printStackTrace();
   		  	fichero.eliminar_fichero();
   		  	Scanner error = new Scanner(e.getMessage());
   		  	error.useDelimiter(",|\\.| |\"");
@@ -224,22 +227,29 @@ void programa() :
 {
   < tPROGRAMA >{dir.add(3);Constants.numPrograma++;
   } tk = < tIDENTIFICADOR >  {T.introducir_programa(tk.image,etiqueta);}
-  {Constants.numIdentificador++;}< tPUNTCOM >  {fichero.escribir("; Programa " + tk.image);et = etiqueta; etiqueta++;fichero.escribir("ENP L"+et);}
-  declaracion_variables() declaracion_acciones()  {fichero.escribir("; Comienzo de " + tk.image);
+  {Constants.numIdentificador++;}< tPUNTCOM >  {fichero.escribir("; Programa " + tk.image);
+   et = etiqueta;
+   etiqueta++;
+   fichero.escribir("ENP L"+et);}
+   
+  declaracion_variables() declaracion_acciones()
+    {fichero.escribir("; Comienzo de " + tk.image);
    fichero.escribir("L"+et + ":");}
+   
   bloque_sentencias()
+  
   {fichero.escribir("; Fin de " + tk.image);
-   fichero.escribir("	LVP");
-    T.eliminar_variables(0);
+   fichero.escribir("   LVP");
+   T.eliminar_variables(0);
    T.eliminar_acciones(0);
    T.eliminar_parametros(0);
    T.eliminar_programa();
    dir.remove(nivel);
-	if(ok){
-	  System.out.println("Programa compilado sin errores.");	}
-	else{
-	  System.out.println("El programa presenta errores.");
-	  fichero.eliminar_fichero();	}
+   if(ok){
+	  System.out.println("Programa compilado sin errores. Se ha generado el fichero " + nombre + ".code");   }
+   else{
+	  System.out.println("El programa presenta errores. No se ha generado ningun fichero.code");
+	  fichero.eliminar_fichero();   }
    }
 }
 
@@ -255,6 +265,7 @@ void declaracion() :
 {ArrayList< Token > ids; Tipo_variable tipVar; }
 {
   tipVar = tipo_variables()  ids = identificadores()
+  
   {Constants.numVariables = Constants.numVariables + ids.size();
    for(int i = 0;  i < ids.size(); i++){
      	Simbolo s = T.buscar_simbolo(ids.get(i).image);
@@ -269,7 +280,7 @@ void declaracion() :
   		}
   		else  		{
   		  ok = false;
-  		  error_semantico(ids.get(i), "Identificador duplicado");  		}
+  		  error_semantico(ids.get(i), "El identificador se encuentra duplicado");  		}
 	 }
   }
 }
@@ -288,8 +299,12 @@ Tipo_variable tipo_variables() :
 ArrayList< Token > identificadores() :
 {ArrayList< Token > ids = new ArrayList< Token >(); Token tk;}
 {
-  tk = < tIDENTIFICADOR >{ids.add(tk); Constants.numIdentificador++;}
-  ( "," tk = <tIDENTIFICADOR >{ids.add(tk); Constants.numIdentificador++;} )*
+  tk = < tIDENTIFICADOR >
+
+  {ids.add(tk); Constants.numIdentificador++;}
+  ( "," tk = <tIDENTIFICADOR >
+
+  {ids.add(tk); Constants.numIdentificador++;} )*
   {return ids;}
 }
 
@@ -306,24 +321,24 @@ void declaracion_acciones() :
 void declaracion_accion() :
 {Simbolo s;int etiq = 0;boolean hasParams = false;}
 {  s = cabecera_accion() < tPUNTCOM >  declaracion_variables()
+  
   {	if(s!= null && s.getLista_parametros()!=null){		hasParams = s.getLista_parametros().size() >0;
   	}
-  
   	if(hasParams){
   		etiq = etiqueta;
   		etiqueta++;
-    	fichero.escribir("	JMP L" + etiq);}  	}  
+    	fichero.escribir("   JMP L" + etiq);}  	}  
   declaracion_acciones()
-  {
-   if(etiq!=0){     fichero.escribir("L"+etiq+":");   }
-   if(s!=null)   {     
-   fichero.escribir("; Comienzo de la accion " + s.getNombre());
- }   }
+  
+  {if(etiq!=0){     fichero.escribir("L"+etiq+":");   }
+   if(s!=null)   {fichero.escribir("; Comienzo de la accion " + s.getNombre());}   }
+   
   bloque_sentencias()
-  {
-    if(s!=null)    {      fichero.escribir("; Fin de la accion / funcion " + s.getNombre());
+  
+  {if(s!=null){
+    fichero.escribir("; Fin de la accion / funcion " + s.getNombre());
     }
-   fichero.escribir("	CSF");
+   fichero.escribir("   CSF");
    Constants.numAcciones++;
    T.eliminar_variables(nivel);
    T.eliminar_acciones(nivel);
@@ -335,30 +350,29 @@ void declaracion_accion() :
 Simbolo cabecera_accion() :
 {ArrayList<Simbolo> listaParam; Token tk; Simbolo s;}
 {
-  < tACCION >{Constants.numAccion++;} tk = < tIDENTIFICADOR >  {fichero.escribir("; Accion "+ tk.image);}
+  < tACCION >{Constants.numAccion++;} tk = < tIDENTIFICADOR >
+    {fichero.escribir("; Accion "+ tk.image);}
   {Constants.numIdentificador++; s = T.buscar_simbolo(tk.image);
    			if((s == null) || (s.getNivel() != nivel)){
    				s = T.introducir_accion(tk.image, nivel, etiqueta, null);
    				etiqueta++;
    				fichero.escribir("L"+s.getDir()+":");
   			}
-  			else
-  			{
+  			else{
   			  	ok = false;
-  	  			error_semantico(tk, "Identificador duplicado");
+  	  			error_semantico(tk, "El identificador se encuentra duplicado");
   	  			s = null;
   			}
   			nivel++; dir.add(3);}
   			listaParam = parametros_formales()
   			{
-  			
     		if(s!=null){
 				for(int i = listaParam.size()-1; i >= 0; i--){
 	    		  	int f = nivel - listaParam.get(i).getNivel();
 					int o = listaParam.get(i).getDir();
 					fichero.escribir("; Recuperacion del parametro " + listaParam.get(i).getNombre());
-	   				fichero.escribir("	SRF " + f + " " + o);
-	   				fichero.escribir("	ASGI");				}
+	   				fichero.escribir("   SRF " + f + " " + o);
+	   				fichero.escribir("   ASGI");				}
 					s.setLista_parametros(listaParam);
     		}
   }
@@ -386,16 +400,16 @@ ArrayList <Simbolo > parametros() :
 {ArrayList< Token > ids; ArrayList<Simbolo > params; Clase_parametro p; Tipo_variable v;}
 {
   p = clase_parametros() v = tipo_variables() ids = lista_parametros()
+  
   {Constants.numParametros = Constants.numParametros + ids.size();
 	params = new ArrayList<Simbolo >();
 	for(int i = ids.size()-1; i >= 0; i--){
-//    for(int i = 0; i < ids.size();  i++){	  Simbolo s = T.buscar_simbolo(ids.get(i).image);
+	  Simbolo s = T.buscar_simbolo(ids.get(i).image);
    	  if((s == null) || (s.getNivel() != nivel)){
    		Simbolo s1 = new Simbolo();
 		s1.introducir_parametro(ids.get(i).image, v, p, nivel,dir.get(nivel));
 		params.add(s1);
 		T.introducir_parametro(ids.get(i).image, v, p, nivel, dir.get(nivel));
-//		int f = nivel - nivel;//		int o = dir.get(nivel);//		fichero.escribir("; Recuperacion del parametro " + ids.get(i).image);//   		fichero.escribir("	SRF " + f + " " + o);//   		fichero.escribir("	ASGI");
 		if(s1.getVariable() == Tipo_variable.ENTERO){
      	  	  dir.set(nivel,dir.get(nivel)+2); 
 		}
@@ -406,7 +420,7 @@ ArrayList <Simbolo > parametros() :
   	  else
   	  {
   	    ok = false;
-  	    error_semantico(ids.get(i), "Identificador duplicado");
+  	    error_semantico(ids.get(i), "El identificador se encuentra duplicado");
   	  }		
 	}
 	return params;
@@ -454,7 +468,7 @@ void sentencia() :
 							}
 							if(s !=null && s.es_valor())							{
 							  ok = false;
-							  error_semantico(tk, "Argumento por valor y no por referencia");							}
+							  error_semantico(tk, "No es posible asignar un valor a un parametro por valor, unicamente por referencia");							}
 							if(s !=null && !s.es_accion()){
 							  if(s.es_referencia()){
 							    fichero.escribir(";	Direccion del parametro " + s.getNombre());							  }
@@ -462,13 +476,14 @@ void sentencia() :
 							  	fichero.escribir("; Direccion de la variable " + s.getNombre());							  }
 							  int f = nivel - s.getNivel();
 		  					  int o = (int)s.getDir();
-   		  					  fichero.escribir("	SRF " + f + " " + o);
+   		  					  fichero.escribir("   SRF " + f + " " + o);
    		  					  if(s.es_referencia()){
-		  					    fichero.escribir("	DRF");
+		  					    fichero.escribir("   DRF");
 		  					  }							}
 } regs = asig_o_inv()
 	{if(s!=null && s.es_accion()){
 		ArrayList<Simbolo > parametros = s.getLista_parametros();
+		
 		if(regs.size() != parametros.size()){
 		  ok = false;
 		  error_semantico(tk,"El numero de parametros de la invocacion a la accion "
@@ -487,11 +502,11 @@ void sentencia() :
 		int l = nivel - s.getNivel();
 		int a = s.getDir();
 		fichero.escribir("; Invocacion a " + s.getNombre());
-		fichero.escribir("	OSF " + osf + " " + l + " L" + a);
+		fichero.escribir("   OSF " + osf + " " + l + " L" + a);
 	}
 	else{
 	  fichero.escribir("; Asignacion");
-	  fichero.escribir("	ASG");	}	}
+	  fichero.escribir("   ASG");	}	}
 | seleccion()
 | mientras_que()
 }
@@ -504,13 +519,13 @@ void leer() :
    ids = lista_asignables() < tPARDER >{Constants.numParder++;}
    {for(int i = 0; i < ids.size(); i++){   		Simbolo s = T.buscar_simbolo(ids.get(i).image);
    		if(s.es_valor())   		{
-   		  	ok = false;			error_semantico(ids.get(i), "Argumento por valor y no por referencia");
+   		  	ok = false;			error_semantico(ids.get(i), "No es posible ejecutar funcion leer sobre un parametro por valor, unicamente por referencia");
    		}
    		else if(s.es_accion()){
    		  	ok = false;
    		    error_semantico(ids.get(i), "No es posible pasar una accion como parametro a la funcion leer");   		}
    		else if(s.getVariable() == Tipo_variable.BOOLEANO)   		{
-   		  	ok = false;			error_semantico(ids.get(i), "No se puede pasar a la funcion leer un booleano");
+   		  	ok = false;			error_semantico(ids.get(i), "No es posible pasar un booleano como parametro a la funcion leer");
    		}
    		else   		{
    		  fichero.escribir("; Leer");
@@ -520,15 +535,15 @@ void leer() :
    		  	fichero.escribir("; Direccion de la variable " + s.getNombre());   		  }
    		  int f = nivel - s.getNivel();
 		  int o = (int)s.getDir();
-   		  fichero.escribir("	SRF " + f + " " + o);
+   		  fichero.escribir("   SRF " + f + " " + o);
    		  int entero;
    		  if(s.getVariable() == Tipo_variable.ENTERO){
    		    entero = 1;   		  }
    		  else{
    		    entero = 0;   		  }
    		  if(s.es_referencia()){
-   		    fichero.escribir("	DRF");   		  }
-   		  fichero.escribir("	RD " + entero);   		}   }
+   		    fichero.escribir("   DRF");   		  }
+   		  fichero.escribir("   RD " + entero);   		}   }
  }
 }
 /*lista_asignables ::= identificadores */
@@ -545,7 +560,7 @@ void escribir() :
 {
   tk = < tESCRIBIR >{Constants.numEscribir++;} < tPARIZQ >{Constants.numPariz++;}
    b = lista_escribibles()   {if (!b){
-     	ok = false;		error_semantico(tk,"La operacion escribir no es valida para expresiones del tipo booleano");
+     	ok = false;		error_semantico(tk,"No es posible pasar un booleano como parametro a la funcion escribir");
    }   } < tPARDER >{Constants.numParder++;}
   {Constants.numOpEscribir++;}
 }
@@ -559,7 +574,7 @@ boolean lista_escribibles() :
       entero = 1;  	}
   	else  	{
   	  entero = 0;  	}
-    fichero.escribir("	WRT "+entero); if(r.es_booleano()){
+    fichero.escribir("   WRT "+entero); if(r.es_booleano()){
   	  b = false;  	}
   } | cadena()) ( "," (  {fichero.escribir("; Escribir");}r = expresion()  { int entero;
     if(r.es_entero()){
@@ -569,7 +584,7 @@ boolean lista_escribibles() :
   	{
   	  entero = 0;
   	}
-    fichero.escribir("	WRT "+entero);}  { if(r.es_booleano()){
+    fichero.escribir("   WRT "+entero);}  { if(r.es_booleano()){
   	  b = false;
   	}  } | cadena()) )*
   {return b;}
@@ -603,18 +618,28 @@ ArrayList<RegistroExpr> invocacion_accion() :
 void mientras_que() :
 {Token tk; RegistroExpr reg; int etiqMQ; int etiqFin;}
 {
-  tk = < tMQ >{etiqMQ = etiqueta; etiqueta++; fichero.escribir("L"+etiqMQ+":");Constants.numMQ++;} reg = expresion()  { etiqFin = etiqueta;
+  tk = < tMQ >
+  
+  {etiqMQ = etiqueta;
+  etiqueta++;
+  fichero.escribir("L"+etiqMQ+":");
+  Constants.numMQ++;}
+
+   reg = expresion()
+     { etiqFin = etiqueta;
   	etiqueta++;
   	fichero.escribir("; Salir del bucle si la guarda se evalua a falso");
-  	fichero.escribir("	JMF L"+etiqFin); 
+  	fichero.escribir("   JMF L"+etiqFin); 
 
     if(!(reg.es_desconocido() || reg.es_booleano())){
     	ok = false;
   	  error_semantico(tk,"La condicion de un bucle debe ser una expresion booleana");
   	}  }
+  
    lista_sentencias() < tFMQ >
+   
   {	fichero.escribir("; Fin de la iteracion. Saltar a la cabecera del bucle.");
-    fichero.escribir("	JMP L"+etiqMQ);
+    fichero.escribir("   JMP L"+etiqMQ);
   	fichero.escribir("L"+etiqFin+":");
   	fichero.escribir("; Fin MQ");
     Constants.numFMQ++;}
@@ -625,19 +650,36 @@ void mientras_que() :
 void seleccion() :
 {Token tk; RegistroExpr reg; int etiqSINO; int etiqFIN;}
 {
-  tk = < tSI >{fichero.escribir("; SI");
-    Constants.numSi++;} reg = expresion()  { if(!(reg.es_desconocido() || reg.es_booleano())){
+  tk = < tSI >
+
+  {fichero.escribir("; SI");
+    Constants.numSi++;}
+
+    reg = expresion()
+      { if(!(reg.es_desconocido() || reg.es_booleano())){
     	ok = false;
   	  error_semantico(tk,"La condicion de un if debe ser una expresion booleana");	}
 	etiqSINO = etiqueta;
 	etiqueta++;
-	fichero.escribir("	JMF L" + etiqSINO);
-  } < tENT >  {fichero.escribir("; ENT");} lista_sentencias()
+	fichero.escribir("   JMF L" + etiqSINO);
+	
+  } < tENT >
+    {fichero.escribir("; ENT");}
+
+  lista_sentencias()
+
+  
 	{etiqFIN = etiqueta;
 	etiqueta++;
-	fichero.escribir("	JMP L" + etiqFIN);
+	fichero.escribir("   JMP L" + etiqFIN);
 	fichero.escribir("L"+etiqSINO+":");}
-  ( < tSI_NO >{fichero.escribir("; SI_NO");Constants.numSi_No++;} lista_sentencias() )? < tFSI >
+  ( < tSI_NO >
+
+  {fichero.escribir("; SI_NO");
+  Constants.numSi_No++;}
+
+   lista_sentencias() )? < tFSI >
+   
   { 
     fichero.escribir("L"+etiqFIN+":");
     fichero.escribir(";	Fin SI.");}
@@ -665,15 +707,22 @@ ArrayList<RegistroExpr> lista_expresiones() :
 RegistroExpr expresion() :
 {RegistroExpr reg; RegistroExpr reg1 = null; Token tk = null;}
 {
-  reg = expresion_simple(){Constants.numExpresiones++;} ( tk = operador_relacional() reg1 = expresion_simple(){Constants.numExpresiones++;} )?
+  reg = expresion_simple()
+  
+  {Constants.numExpresiones++;}
+
+  ( tk = operador_relacional() reg1 = expresion_simple()
+
+  {Constants.numExpresiones++;} )?
+  
   {	if(reg1 == null){
     	return reg;    }
     else{
       	if(reg.es_booleano() && reg1.es_booleano()){			if(tk.image.equals("=") || tk.image.equals("<>")){
 				if(tk.image.equals("=")){
-				  fichero.escribir("	EQ");				}
+				  fichero.escribir("   EQ");				}
 				else{
-				  fichero.escribir("	NEQ");				}
+				  fichero.escribir("   NEQ");				}
 				return reg;
 			}
 			else{
@@ -700,20 +749,20 @@ RegistroExpr expresion() :
       			(reg1.es_entero()||reg1.es_caracter()||reg1.es_desconocido())){					RegistroExpr result = new RegistroExpr();
 					result.setTipo(Tipo_variable.BOOLEANO);
 					if(tk.image.equals("<")){
-				  		fichero.escribir("	LT");
+				  		fichero.escribir("   LT");
 					}
 					else if(tk.image.equals("<=")){
-				  		fichero.escribir("	LTE");
+				  		fichero.escribir("   LTE");
 					}
-					else if(tk.image.equals(">")){						fichero.escribir("	GT");
+					else if(tk.image.equals(">")){						fichero.escribir("   GT");
 					}
 					else if(tk.image.equals(">=")){
-						fichero.escribir("	GTE");
+						fichero.escribir("   GTE");
 					}
 					else if(tk.image.equals("=")){
-					  	fichero.escribir("	EQ");					}
+					  	fichero.escribir("   EQ");					}
 					else{
-					  	fichero.escribir("	NEQ");					}
+					  	fichero.escribir("   NEQ");					}
 					return result;
       			}
       	else{
@@ -759,17 +808,17 @@ RegistroExpr expresion_simple() :
 					&& !tk.image.equalsIgnoreCase("or")){				reg = new RegistroExpr();
 				reg.setTipo(Tipo_variable.ENTERO);
 				if(tk.image.equals("+")){
-			        fichero.escribir("	PLUS");
+			        fichero.escribir("   PLUS");
 			      }
 			    else{
-			        fichero.escribir("	SBT");
+			        fichero.escribir("   SBT");
 			    }
 			}
 			else if(((reg.es_booleano()||reg.es_desconocido()) && (reg1.es_booleano() || reg1.es_desconocido()))
 					&& tk.image.equalsIgnoreCase("or")){
 				reg = new RegistroExpr();
 				reg.setTipo(Tipo_variable.BOOLEANO);
-				fichero.escribir("	OR");
+				fichero.escribir("   OR");
 			}
 			else			{
 			  reg = new RegistroExpr();			  reg.setTipo(Tipo_variable.DESCONOCIDO);
@@ -820,11 +869,11 @@ RegistroExpr termino() :
 			    reg.setTipo(Tipo_variable.ENTERO);
 			    
 			      if(tk.image.equals("*")){
-			        fichero.escribir("	TMS");			      }
+			        fichero.escribir("   TMS");			      }
 			      else if(tk.image.equalsIgnoreCase("mod")){
-			        fichero.escribir("	MOD");			      }
+			        fichero.escribir("   MOD");			      }
 			      else{
-			        fichero.escribir("	DIV");			      }			  }  
+			        fichero.escribir("   DIV");			      }			  }  
 			}
 			else{
 			  ok = false;
@@ -837,7 +886,7 @@ RegistroExpr termino() :
 		  if(tk.image.equalsIgnoreCase("and")){
 		    reg = new RegistroExpr();
 		    reg.setTipo(Tipo_variable.BOOLEANO);
-			fichero.escribir("	AND");
+			fichero.escribir("   AND");
 		  }
 		  else{
 		    ok = false;
@@ -889,7 +938,7 @@ RegistroExpr factor() :
 			return result;	
     	}
     	else{
-    	  	fichero.escribir("	NGI");
+    	  	fichero.escribir("   NGI");
     		return reg;
     	}
     }
@@ -901,7 +950,7 @@ RegistroExpr factor() :
 			return result;	
 		}
 		else{
-		    fichero.escribir("	NGB");
+		    fichero.escribir("   NGB");
     		return reg;
     	}	}
 |tk = < tENTACAR >{Constants.numEntacar++;} < tPARIZQ >{Constants.numPariz++;}
@@ -917,7 +966,7 @@ reg = expresion() < tPARDER >{Constants.numParder++;}
 				return reg;
 			}
 			else{
-			  	ok = false;				error_semantico(tk,"El argumento de la operacion entacar debe estar comprendido entre 0 y 126");
+			  	ok = false;				error_semantico(tk,"El argumento de la funcion entacar debe estar comprendido entre 0 y 126");
 				RegistroExpr result = new RegistroExpr();
 				result.setTipo(Tipo_variable.DESCONOCIDO);
 				return result;
@@ -953,9 +1002,9 @@ reg = expresion() < tPARDER >{Constants.numParder++;}
 			  }
 			  else{				  fichero.escribir("; Acceso a la variable " + s.getNombre());
 			  }
-		      fichero.escribir("	SRF " + " " + f + " " + o);			  fichero.escribir("	DRF");
+		      fichero.escribir("   SRF " + " " + f + " " + o);			  fichero.escribir("   DRF");
 			  if(s.es_referencia()){
-			    fichero.escribir("	DRF");			  }
+			    fichero.escribir("   DRF");			  }
 			  reg.setTipo(s.getVariable());
 			  reg.setTk(tk);
 			  reg.setClase(s.getParametro());
@@ -976,25 +1025,25 @@ reg = expresion() < tPARDER >{Constants.numParder++;}
 		  reg.setTk(tk);
 		  return reg;		}	}
 |tk = < tNUMERO >{Constants.numNumero++;}
-	{	fichero.escribir("	STC " + tk.image);
+	{	fichero.escribir("   STC " + tk.image);
 	  	reg = new RegistroExpr();
 		reg.introducir_entero(tk,Integer.parseInt(tk.image));
 		return reg;
 	}
 |tk = < tCARAC >{Constants.numCarac++;}
 	{	
-	  	fichero.escribir("	STC " + (int)(tk.image.charAt(1)));
+	  	fichero.escribir("   STC " + (int)(tk.image.charAt(1)));
 	  	reg = new RegistroExpr();
 		reg.introducir_char(tk,tk.image);
 		return reg;	}
 |tk = < tTRUE >{Constants.numTrue++; }
-	{	fichero.escribir("	STC 1");
+	{	fichero.escribir("   STC 1");
 	  	reg = new RegistroExpr();
 		reg.introducir_booleano(tk, true);
 		return reg;	}
 |tk = < tFALSE >{Constants.numFalse++;}
 	{
-	  	fichero.escribir("	STC 0");
+	  	fichero.escribir("   STC 0");
 	  	reg = new RegistroExpr();
 		reg.introducir_booleano(tk, false);
 		return reg;
@@ -1011,7 +1060,7 @@ void cadena() :
 	  fichero.escribir("; cadena " + tk.image);
 	String cad = tk.image;
 	for(int i = 1; i < cad.length()-1; i++){
-	  fichero.escribir("	STC " + (int)(cad.charAt(i)));	  fichero.escribir("	WRT 0");
+	  fichero.escribir("   STC " + (int)(cad.charAt(i)));	  fichero.escribir("   WRT 0");
 	}
-	;Constants.numCadena++;}}
+	Constants.numCadena++;}}
 

@@ -380,10 +380,10 @@ public class Tabla_simbolos {
 	/**
 	 * Devuelve a partir de una cadena la fila de la tabla hash que le corresponde
 	 */
-	private int Pearson(String nombre){
+	public int Pearson(String nombre){
 		int h = 0;
 		for (int i = 0; i < nombre.length(); i++) {
-			h = T[(h ^ nombre.charAt(i))%(MAX+1)];
+			h = T[(h ^ nombre.charAt(i))%(MAX)];
 		}
 		return h;
 	}
