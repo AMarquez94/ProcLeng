@@ -17,9 +17,9 @@ accion a2 (val entero b);
 		a1:=a1+1;
 		caca(j);
 		caca(j);
-		fallo:="hola"="hola";
+		%fallo:="hola"="hola";
 		fallo:="a">="c";
-		fallo:="hola">2;
+		%fallo:="hola">2;
 		fallo:=1>3;
 	Fin
 Principio
@@ -35,7 +35,7 @@ Principio
 		  a3(d);
 		  d:=num;
         d:=0;
-		  d:="hola";
+		  %d:="hola";
 		  d:=fallo+3;
 		  fallo:=entacar(fallo);
 		  d:=hombre;
