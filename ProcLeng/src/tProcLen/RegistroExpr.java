@@ -30,7 +30,7 @@ public class RegistroExpr {
 	public int getValorEnt() {
 		return valorEnt;
 	}
-	public void setValorEnt(int valorEnt) {
+	public void setValorEnt(Integer valorEnt) {
 		this.valorEnt = valorEnt;
 	}
 	public boolean isValorBool() {
@@ -138,6 +138,20 @@ public class RegistroExpr {
 	 */
 	public boolean has_valor(){
 		return this.valorEnt != null;
+	}
+	
+	/**
+	 * Devuelve true si y solo si el registro tiene valor booleano
+	 */
+	public boolean has_valorB(){
+		return this.valorBool != null;
+	}
+	
+	/**
+	 * Devuelve true si y solo si el registro tiene valor Char
+	 */
+	public boolean has_valorC(){
+		return this.valorChar != null;
 	}
 
 	/**

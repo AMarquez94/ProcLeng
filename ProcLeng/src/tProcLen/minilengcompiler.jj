@@ -105,6 +105,7 @@ public class minilengcompiler{
 	}	while (true)	{	    try	    {   			if (minilengcompiler.compile() == 1)        	{     		 System.out.println("Fin.");   		     break;	        }  		}
 
   		/* Error sintactico */  		catch (Exception e)  		{
+  		    e.printStackTrace();
   		  	fichero.eliminar_fichero();
   		  	Scanner error = new Scanner(e.getMessage());
   		  	error.useDelimiter(",|\\.| |\"");
@@ -254,7 +255,7 @@ void programa() :
    T.eliminar_programa();
    dir.remove(nivel);
    if(ok){
-	  System.out.println("Programa compilado sin errores. Se ha generado el fichero " + nombre + ".code");   }
+	  System.out.println("Compilacion finalizada. Se ha generado el fichero " + nombre + ".code");   }
    else{
 	  System.out.println("El programa presenta errores. No se ha generado ningun fichero.code");
 	  fichero.eliminar_fichero();   }
@@ -488,7 +489,7 @@ void sentencia() :
    		  					  if(s.es_referencia()){
 		  					    fichero.escribir("   DRF");
 		  					  }							}
-} regs = asig_o_inv()
+} regs = asig_o_inv(s)
 	{if(s!=null && s.es_accion()){
 		ArrayList<Simbolo > parametros = s.getLista_parametros();
 		
@@ -599,19 +600,24 @@ boolean lista_escribibles() :
 }
 
 /*asig_o_inv ::= asignación | invocacion_accion*/
-ArrayList<RegistroExpr> asig_o_inv() :
+ArrayList<RegistroExpr> asig_o_inv(Simbolo s) :
 {ArrayList<RegistroExpr> regs = new ArrayList<RegistroExpr >();}
 {
-  (regs = asignacion()| regs = invocacion_accion())
+  (regs = asignacion(s)| regs = invocacion_accion())
 {return regs;}
 }
 
 /*asignación ::= <tOPAS> expresion ";" */
-ArrayList<RegistroExpr> asignacion() :
-{ArrayList<RegistroExpr> regs = new ArrayList<RegistroExpr>(); RegistroExpr reg;}
+ArrayList<RegistroExpr> asignacion(Simbolo s) :
+{Token tk;ArrayList<RegistroExpr> regs = new ArrayList<RegistroExpr>(); RegistroExpr reg;}
 {
-  <tOPAS >{Constants.numOpas++;} reg = expresion() < tPUNTCOM >
-  {Constants.numAsignar++; regs.add(reg); return regs;}
+  tk = <tOPAS >{Constants.numOpas++;} reg = expresion() < tPUNTCOM >
+  { if(s!=null){    if(!((s.getVariable() == Tipo_variable.DESCONOCIDO) || (s.getVariable() == reg.getTipo())
+     || (reg.getTipo() == Tipo_variable.DESCONOCIDO))){
+       error_semantico(tk,"Los tipos de la expresion a asignar y la variable donde se asignara no son compatibles");     }
+   }
+
+    Constants.numAsignar++; regs.add(reg); return regs;}
 }
 
 /*invocacion_accion ::= argumentos ";" */
@@ -728,8 +734,16 @@ RegistroExpr expresion() :
     else{
       	if(reg.es_booleano() && reg1.es_booleano()){			if(tk.image.equals("=") || tk.image.equals("<>")){
 				if(tk.image.equals("=")){
+
+				if(reg.has_valorB() && reg1.has_valorB()){
+					reg.setValorBool(reg.isValorBool() == reg1.isValorBool());
+			    }
 				  fichero.escribir("   EQ");				}
 				else{
+
+				  if(reg.has_valorB() && reg1.has_valorB()){
+					reg.setValorBool(reg.isValorBool() != reg1.isValorBool());
+			    }
 				  fichero.escribir("   NEQ");				}
 				return reg;
 			}
@@ -757,19 +771,57 @@ RegistroExpr expresion() :
       			(reg1.es_entero()||reg1.es_caracter()||reg1.es_desconocido())){					RegistroExpr result = new RegistroExpr();
 					result.setTipo(Tipo_variable.BOOLEANO);
 					if(tk.image.equals("<")){
+
+					  if(reg.has_valor() && reg1.has_valor()){
+					    result.setValorBool(reg.getValorEnt() < reg1.getValorEnt());
+					  }
+
+					   if(reg.has_valorC() && reg1.has_valorC()){
+					    result.setValorBool(reg.getValorChar().charAt(1) < reg1.getValorChar().charAt(1));
+					  }
 				  		fichero.escribir("   LT");
 					}
 					else if(tk.image.equals("<=")){
+					  if(reg.has_valor() && reg1.has_valor()){
+					    result.setValorBool(reg.getValorEnt() <= reg1.getValorEnt());
+					  }
+					    if(reg.has_valorC() && reg1.has_valorC()){
+					    result.setValorBool(reg.getValorChar().charAt(1) <= reg1.getValorChar().charAt(1));
+					  }
 				  		fichero.escribir("   LTE");
 					}
-					else if(tk.image.equals(">")){						fichero.escribir("   GT");
+					else if(tk.image.equals(">")){
+					  if(reg.has_valor() && reg1.has_valor()){
+					    result.setValorBool(reg.getValorEnt() > reg1.getValorEnt());
+					  }
+					    if(reg.has_valorC() && reg1.has_valorC()){
+					    result.setValorBool(reg.getValorChar().charAt(1) > reg1.getValorChar().charAt(1));
+					  }						fichero.escribir("   GT");
 					}
 					else if(tk.image.equals(">=")){
+					  if(reg.has_valor() && reg1.has_valor()){
+					    result.setValorBool(reg.getValorEnt() >= reg1.getValorEnt());
+					  }
+					    if(reg.has_valorC() && reg1.has_valorC()){
+					    result.setValorBool(reg.getValorChar().charAt(1) >= reg1.getValorChar().charAt(1));
+					  }
 						fichero.escribir("   GTE");
 					}
 					else if(tk.image.equals("=")){
+					  if(reg.has_valor() && reg1.has_valor()){
+					    result.setValorBool(reg.getValorEnt() == reg1.getValorEnt());
+					  }
+					    if(reg.has_valorC() && reg1.has_valorC()){
+					    result.setValorBool(reg.getValorChar().charAt(1) == reg1.getValorChar().charAt(1));
+					  }
 					  	fichero.escribir("   EQ");					}
 					else{
+					  if(reg.has_valor() && reg1.has_valor()){
+					    result.setValorBool(reg.getValorEnt() != reg1.getValorEnt());
+					  }
+					    if(reg.has_valorC() && reg1.has_valorC()){
+					    result.setValorBool(reg.getValorChar().charAt(1) != reg1.getValorChar().charAt(1));
+					  }
 					  	fichero.escribir("   NEQ");					}
 					return result;
       			}
@@ -813,20 +865,32 @@ RegistroExpr expresion_simple() :
   		else{			if(reg.es_desconocido() && reg1.es_desconocido()){
 			  ;			}
 			else if(((reg.es_entero()||reg.es_desconocido()) && (reg1.es_entero() || reg1.es_desconocido()))
-					&& !tk.image.equalsIgnoreCase("or")){				reg = new RegistroExpr();
-				reg.setTipo(Tipo_variable.ENTERO);
+					&& !tk.image.equalsIgnoreCase("or")){				RegistroExpr regAux = new RegistroExpr();
+				regAux.setTipo(Tipo_variable.ENTERO);
 				if(tk.image.equals("+")){
+				  if(reg.has_valor() && reg1.has_valor()){				    regAux.setValorEnt(reg.getValorEnt() + reg1.getValorEnt());
+			      }
 			        fichero.escribir("   PLUS");
 			      }
 			    else{
-			        fichero.escribir("   SBT");
+			      if(reg.has_valor() && reg1.has_valor()){
+				    regAux.setValorEnt(reg.getValorEnt() - reg1.getValorEnt());
+			      }
+			      fichero.escribir("   SBT");
 			    }
+
+			    reg = regAux;
 			}
 			else if(((reg.es_booleano()||reg.es_desconocido()) && (reg1.es_booleano() || reg1.es_desconocido()))
 					&& tk.image.equalsIgnoreCase("or")){
-				reg = new RegistroExpr();
-				reg.setTipo(Tipo_variable.BOOLEANO);
+				RegistroExpr regAux = new RegistroExpr();
+				regAux.setTipo(Tipo_variable.BOOLEANO);
+				if(reg.has_valorB() && reg1.has_valorB()){
+				    regAux.setValorBool(reg.isValorBool() || reg1.isValorBool());
+			      }
 				fichero.escribir("   OR");
+
+				reg = regAux;
 			}
 			else			{
 			  reg = new RegistroExpr();			  reg.setTipo(Tipo_variable.DESCONOCIDO);
@@ -835,7 +899,7 @@ RegistroExpr expresion_simple() :
 			     error_semantico(tk, "El operador 'or' solo se puede aplicar a expresiones booleanas");
 			  }			  else{
 			     ok = false;
-				 error_semantico(tk, "El operador '+' solo se puede aplicar a expresiones enteras");			  }
+				 error_semantico(tk, "El operador " + tk.image + " solo se puede aplicar a expresiones enteras");			  }
 			}
 		}
   } )*
@@ -867,21 +931,32 @@ RegistroExpr termino() :
 			reg.setTipo(Tipo_variable.DESCONOCIDO);
 		}
 		else if((reg.es_desconocido()||reg.es_entero())&&(reg1.es_desconocido()||reg1.es_entero())){			if(!tk.image.equalsIgnoreCase("and")){
-			  if((tk.image.equalsIgnoreCase("div") || tk.image.equals("/")) && reg.has_valor() && reg1.has_valor() && reg1.getValorEnt()==0){
+			  if((tk.image.equalsIgnoreCase("div") || tk.image.equals("/")) && reg1.has_valor() && reg1.getValorEnt()==0){
 				ok = false;
 			    error_semantico(tk,"No es posible dividir un entero por 0 (causa desbordamiento)");
 			    reg = new RegistroExpr();
 			    reg.setTipo(Tipo_variable.DESCONOCIDO);			  }
 			  else{
-			    reg = new RegistroExpr();
-			    reg.setTipo(Tipo_variable.ENTERO);
+			    RegistroExpr regAux = new RegistroExpr();
+			    regAux.setTipo(Tipo_variable.ENTERO);
 			    
 			      if(tk.image.equals("*")){
+			        if(reg.has_valor() && reg1.has_valor()){
+			          regAux.setValorEnt(reg.getValorEnt() * reg1.getValorEnt());			        }
 			        fichero.escribir("   TMS");			      }
 			      else if(tk.image.equalsIgnoreCase("mod")){
+			        if(reg.has_valor() && reg1.has_valor()){
+			          regAux.setValorEnt(reg.getValorEnt() % reg1.getValorEnt());
+			        }
 			        fichero.escribir("   MOD");			      }
 			      else{
-			        fichero.escribir("   DIV");			      }			  }  
+			        if(reg.has_valor() && reg1.has_valor()){
+			          regAux.setValorEnt(reg.getValorEnt() / reg1.getValorEnt());
+			        }
+			        fichero.escribir("   DIV");			      }
+
+			      reg = regAux;
+			  }			
 			}
 			else{
 			  ok = false;
@@ -892,9 +967,15 @@ RegistroExpr termino() :
 		}
 		else{
 		  if(tk.image.equalsIgnoreCase("and")){
-		    reg = new RegistroExpr();
-		    reg.setTipo(Tipo_variable.BOOLEANO);
+		    
+		    RegistroExpr regAux = new RegistroExpr();
+		    regAux.setTipo(Tipo_variable.BOOLEANO);
+		    
+		    if(reg.has_valorB() && reg1.has_valorB()){
+		      regAux.setValorBool(reg.isValorBool() && reg1.isValorBool());
+		    }
 			fichero.escribir("   AND");
+			reg = regAux;
 		  }
 		  else{
 		    ok = false;
@@ -946,6 +1027,8 @@ RegistroExpr factor() :
 			return result;	
     	}
     	else{
+    	  	if(reg.has_valor()){
+    	  	  reg.setValorEnt(-reg.getValorEnt());    	  	}
     	  	fichero.escribir("   NGI");
     		return reg;
     	}
@@ -958,6 +1041,8 @@ RegistroExpr factor() :
 			return result;	
 		}
 		else{
+		  	if(reg.has_valorB()){
+		  	  reg.setValorBool(!reg.isValorBool());		  	}
 		    fichero.escribir("   NGB");
     		return reg;
     	}	}
@@ -971,6 +1056,8 @@ reg = expresion() < tPARDER >{Constants.numParder++;}
 		else{		  if(reg.has_valor()){
 			if(reg.getValorEnt() >= 0 && reg.getValorEnt() <= 126){
 				reg.setTipo(Tipo_variable.CHAR);
+				reg.setValorChar((char)reg.getValorEnt()+"");
+				reg.setValorEnt(null);
 				return reg;
 			}
 			else{
@@ -995,6 +1082,9 @@ reg = expresion() < tPARDER >{Constants.numParder++;}
 		else
 		{
 			reg.setTipo(Tipo_variable.ENTERO);
+			if(reg.has_valorC()){				reg.setValorEnt((int)(reg.getValorChar().charAt(1)));
+				reg.setValorChar(null);
+			}
 			return reg;
 		}
 	}
